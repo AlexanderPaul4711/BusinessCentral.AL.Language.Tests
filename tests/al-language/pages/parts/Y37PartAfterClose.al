@@ -1029,6 +1029,17 @@ codeunit 92648 "LT Y37 PC Tests"
         OperationQueries: Integer;
         OperationAgcr: Integer;
         Cleaned: Boolean;
+        BeforeRead: Boolean;
+        BeforeId: Integer;
+        BeforeCode: Text;
+        ActionOk: Boolean;
+        ActionCode: Text;
+        AfterRead: Boolean;
+        AfterId: Integer;
+        AfterCode: Text;
+        FollowTrace: Text;
+        FollowQueries: Integer;
+        FollowAgcr: Integer;
     begin
         ClpLog.Configure(false, RequestClose, PermitClose);
         ClpLog.EnableDetails();
@@ -1038,10 +1049,39 @@ codeunit 92648 "LT Y37 PC Tests"
         OperationTrace := ClpLog.ReadTrace();
         OperationQueries := ClpLog.QueryCount();
         OperationAgcr := ClpLog.AgcrCount();
+        // Freeze the original operation first. Action processing is a separate contrast.
+        BeforeId := -777;
+        ClearLastError();
+        BeforeRead := ClpTryParent(BeforeId);
+        if not BeforeRead then
+            BeforeCode := GetLastErrorCode();
+        ClearLastError();
+        ActionOk := ClpTryDetailReadAction();
+        if not ActionOk then
+            ActionCode := GetLastErrorCode();
+        AfterId := -777;
+        ClearLastError();
+        AfterRead := ClpTryParent(AfterId);
+        if not AfterRead then
+            AfterCode := GetLastErrorCode();
+        FollowTrace := CopyStr(ClpLog.ReadTrace(), StrLen(OperationTrace) + 1);
+        FollowQueries := ClpLog.QueryCount();
+        FollowAgcr := ClpLog.AgcrCount();
         Observer.Observe('detail.case', Identity);
         Observer.Observe('operation.trace', OperationTrace);
         Observer.Observe('operation.queries', Format(OperationQueries));
         Observer.Observe('operation.agcr', Format(OperationAgcr));
+        Observer.Observe('follow.before.ok', ClpFlag(BeforeRead));
+        Observer.Observe('follow.before.id', Format(BeforeId));
+        Observer.Observe('follow.before.error.code', BeforeCode);
+        Observer.Observe('follow.action.ok', ClpFlag(ActionOk));
+        Observer.Observe('follow.action.error.code', ActionCode);
+        Observer.Observe('follow.trace', FollowTrace);
+        Observer.Observe('follow.queries', Format(FollowQueries));
+        Observer.Observe('follow.agcr', Format(FollowAgcr));
+        Observer.Observe('follow.after.ok', ClpFlag(AfterRead));
+        Observer.Observe('follow.after.id', Format(AfterId));
+        Observer.Observe('follow.after.error.code', AfterCode);
         ClpLog.Mark('DETAIL.CLEANUP.BEGIN');
         Cleaned := ClpTryClose();
         Observer.Observe('cleanup.ok', ClpFlag(Cleaned));
@@ -1058,6 +1098,12 @@ codeunit 92648 "LT Y37 PC Tests"
     end;
 
     [Test]
+    procedure CLP_Detail_AGCR_NoClose_Observe_More1()
+    begin
+        Observer.More();
+    end;
+
+    [Test]
     procedure CLP_Detail_AGCR_Allowed_Observe()
     begin
         Initialize();
@@ -1065,9 +1111,27 @@ codeunit 92648 "LT Y37 PC Tests"
     end;
 
     [Test]
+    procedure CLP_Detail_AGCR_Allowed_Observe_More1()
+    begin
+        Observer.More();
+    end;
+
+    [Test]
     procedure CLP_Detail_AGCR_Veto_Observe()
     begin
         Initialize();
         ClpDetailedOpen(true, false, 'CLP_Detail_AGCR_Veto_Observe');
+    end;
+
+    [Test]
+    procedure CLP_Detail_AGCR_Veto_Observe_More1()
+    begin
+        Observer.More();
+    end;
+
+    [TryFunction]
+    local procedure ClpTryDetailReadAction()
+    begin
+        ClpParent.DetailReadRecord.Invoke();
     end;
 }

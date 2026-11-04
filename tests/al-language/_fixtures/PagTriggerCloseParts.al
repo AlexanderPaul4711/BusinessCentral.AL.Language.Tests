@@ -181,6 +181,16 @@ page 97791 "PAG Trigger Close Parent"
     {
         area(Processing)
         {
+            // Read-only diagnostic, reached only by the new opt-in observation.
+            // The action pipeline can itself affect state before this marker.
+            action(DetailReadRecord)
+            {
+                ApplicationArea = All;
+                trigger OnAction()
+                begin
+                    Log.Detail('FOLLOW.ACTION', Rec.Id, Probed);
+                end;
+            }
             action(ProbeAction)
             {
                 ApplicationArea = All;
