@@ -19,6 +19,8 @@ codeunit 97793 "PAG Trigger Close Log"
         PermitClose: Boolean;
         Queries: Integer;
         ObservationCase: Text;
+        Detailed: Boolean;
+        AgcrCalls: Integer;
 
     procedure Reset()
     begin
@@ -28,6 +30,32 @@ codeunit 97793 "PAG Trigger Close Log"
         PermitClose := true;
         Queries := 0;
         ObservationCase := '';
+        Detailed := false;
+        AgcrCalls := 0;
+    end;
+
+    procedure EnableDetails()
+    begin
+        Detailed := true;
+    end;
+
+    procedure NoteAgcr()
+    begin
+        if Detailed then
+            AgcrCalls += 1;
+    end;
+
+    procedure AgcrCount(): Integer
+    begin
+        exit(AgcrCalls);
+    end;
+
+    procedure Detail(Phase: Text; ParentId: Integer; AlreadyProbed: Boolean)
+    begin
+        if Detailed then
+            Mark('D:' + Phase + ':id=' + Format(ParentId) +
+                ':agcr=' + Format(AgcrCalls) + ':q=' + Format(Queries) +
+                ':probed=' + Format(AlreadyProbed));
     end;
 
     procedure Configure(FromAction: Boolean; CloseRequested: Boolean; CloseAllowed: Boolean)
@@ -170,16 +198,20 @@ page 97791 "PAG Trigger Close Parent"
 
     trigger OnOpenPage()
     begin
+        Log.Detail('OPEN.before', Rec.Id, Probed);
         Log.Mark('PARENT.OPEN');
         if Rec.IsEmpty() then begin
             Rec.Init();
             Rec.Id := 1;
             Rec.Insert(false);
         end;
+        Log.Detail('OPEN.after', Rec.Id, Probed);
     end;
 
     trigger OnAfterGetCurrRecord()
     begin
+        Log.NoteAgcr();
+        Log.Detail('AGCR.entry', Rec.Id, Probed);
         if Probed or Log.FromAction() then
             exit;
         Probed := true;
@@ -190,11 +222,14 @@ page 97791 "PAG Trigger Close Parent"
     trigger OnQueryClosePage(CloseAction: Action): Boolean
     begin
         Log.QuerySeen(CloseAction);
+        Log.Detail('QUERY.entry:' + Format(CloseAction), Rec.Id, Probed);
+        Log.Detail('QUERY.return:' + Format(Log.AllowClose()), Rec.Id, Probed);
         exit(Log.AllowClose());
     end;
 
     trigger OnClosePage()
     begin
+        Log.Detail('CLOSE.entry', Rec.Id, Probed);
         Log.Mark('PARENT.CLOSE');
     end;
 
@@ -203,13 +238,17 @@ page 97791 "PAG Trigger Close Parent"
         Reply: Text;
     begin
         if Log.ShouldClose() then begin
+            Log.Detail('CALL.CLOSE.before', Rec.Id, Probed);
             Log.Mark('BEFORE.CLOSE');
             CurrPage.Close();
             Log.Mark('AFTER.CLOSE');
+            Log.Detail('CALL.CLOSE.after', Rec.Id, Probed);
         end else
             Log.Mark('NO.CLOSE');
+        Log.Detail('PART.before', Rec.Id, Probed);
         Log.Mark('BEFORE.PART');
         Reply := CurrPage.PartBody.Page.Touch();
         Log.Mark('AFTER.PART:' + Reply);
+        Log.Detail('PART.after:' + Reply, Rec.Id, Probed);
     end;
 }

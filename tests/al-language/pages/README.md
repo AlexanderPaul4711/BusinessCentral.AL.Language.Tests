@@ -89,3 +89,5 @@ A new topic gets a line here in the same pull request (standing rule 8 in CONTRI
 5. Never renumber a codeunit or rename a test. Read the standing rules in `CONTRIBUTING.md` first.
 
 `parts/Y37PartAfterClose.al` includes an observe-only bootstrap for trigger Close followed by an in-body part call, with no-close, veto and already-open action controls. Catch-context and external follow-up observations are separate.
+
+The CLP_Detail_AGCR observation bootstrap records opt-in parent Rec/AGCR/query telemetry before cleanup; existing close-part contracts stay unchanged.

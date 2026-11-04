@@ -1021,4 +1021,53 @@ codeunit 92648 "LT Y37 PC Tests"
                 Error('Unknown close/part observation case: %1', ObservationCase);
         end;
     end;
+
+    // Observation bootstrap: exact native telemetry only, no inferred VM behavior.
+    local procedure ClpDetailedOpen(RequestClose: Boolean; PermitClose: Boolean; Identity: Text)
+    var
+        OperationTrace: Text;
+        OperationQueries: Integer;
+        OperationAgcr: Integer;
+        Cleaned: Boolean;
+    begin
+        ClpLog.Configure(false, RequestClose, PermitClose);
+        ClpLog.EnableDetails();
+        ClpLog.Mark('DETAIL.BEFORE.OPEN');
+        ClpParent.OpenView();
+        ClpLog.Mark('DETAIL.OPERATION.END');
+        OperationTrace := ClpLog.ReadTrace();
+        OperationQueries := ClpLog.QueryCount();
+        OperationAgcr := ClpLog.AgcrCount();
+        Observer.Observe('detail.case', Identity);
+        Observer.Observe('operation.trace', OperationTrace);
+        Observer.Observe('operation.queries', Format(OperationQueries));
+        Observer.Observe('operation.agcr', Format(OperationAgcr));
+        ClpLog.Mark('DETAIL.CLEANUP.BEGIN');
+        Cleaned := ClpTryClose();
+        Observer.Observe('cleanup.ok', ClpFlag(Cleaned));
+        Observer.Observe('cleanup.queries', Format(ClpLog.QueryCount()));
+        Observer.Observe('capture.end', 'COMPLETE');
+        Observer.Finish();
+    end;
+
+    [Test]
+    procedure CLP_Detail_AGCR_NoClose_Observe()
+    begin
+        Initialize();
+        ClpDetailedOpen(false, true, 'CLP_Detail_AGCR_NoClose_Observe');
+    end;
+
+    [Test]
+    procedure CLP_Detail_AGCR_Allowed_Observe()
+    begin
+        Initialize();
+        ClpDetailedOpen(true, true, 'CLP_Detail_AGCR_Allowed_Observe');
+    end;
+
+    [Test]
+    procedure CLP_Detail_AGCR_Veto_Observe()
+    begin
+        Initialize();
+        ClpDetailedOpen(true, false, 'CLP_Detail_AGCR_Veto_Observe');
+    end;
 }
