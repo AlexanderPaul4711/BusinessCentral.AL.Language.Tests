@@ -1882,4 +1882,81 @@ codeunit 92648 "LT Y37 PC Tests"
         Initialize();
         MROwnCase('MRO_OpenOwn_Part_SaveRecord_Try_Observe', 2021, 1, 2, true);
     end;
+
+    [ModalPageHandler]
+    procedure MRFPartHandler(var P: TestPage "PAG Failed Part Host")
+    var L: Codeunit "PAG Modal Writes Log";
+    begin L.Mark('R.HANDLER.ERROR'); Error('default part handler failure'); end;
+
+    [TryFunction]
+    local procedure MRFTryRun(var Pg: Page "PAG Failed Part Host")
+    var Answer: Action;
+    begin Answer := Pg.RunModal(); end;
+
+    [TryFunction]
+    local procedure MRFTryRead(var Pg: Page "PAG Failed Part Host"; var Value: Text)
+    begin Value := Pg.ReadChild(); end;
+
+    local procedure MRFRead(var Pg: Page "PAG Failed Part Host"; LabelText: Text)
+    var Value: Text; Ok: Boolean; Code: Text; ErrorText: Text; L: Codeunit "PAG Modal Writes Log";
+    begin
+        Observer.Observe(LabelText + '.trace.before', L.ReadTrace());
+        ClearLastError(); Ok := MRFTryRead(Pg, Value);
+        if not Ok then begin Code := GetLastErrorCode(); ErrorText := GetLastErrorText(); end;
+        Observer.Observe(LabelText + '.ok', Format(Ok));
+        Observer.Observe(LabelText + '.error.code', Code);
+        Observer.Observe(LabelText + '.error.text', ErrorText);
+        Observer.Observe(LabelText + '.value', Value);
+        Observer.Observe(LabelText + '.trace.after', L.ReadTrace());
+    end;
+
+    local procedure MRFCase(Identity: Text; RowId: Integer; RunWithError: Boolean)
+    var H: Record "PAG Modal Writes Host"; R: Record "PAG Modal Writes Line";
+        Pg: Page "PAG Failed Part Host"; L: Codeunit "PAG Modal Writes Log";
+        RunOk: Boolean; Code: Text; ErrorText: Text;
+    begin
+        L.Configure(0, 1, 0, RowId);
+        H.Id := RowId; H.Value := 'host-seed'; H.Insert(false);
+        R.Id := RowId; R.Value := 'part-seed'; R.Insert(false);
+        Pg.SetRecord(H);
+        if RunWithError then begin
+            ClearLastError(); RunOk := MRFTryRun(Pg);
+            if not RunOk then begin Code := GetLastErrorCode(); ErrorText := GetLastErrorText(); end;
+            Observer.Observe('run.ok', Format(RunOk));
+            Observer.Observe('run.error.code', Code);
+            Observer.Observe('run.error.text', ErrorText);
+        end;
+        Observer.Observe('trace.before.getters', L.ReadTrace());
+        MRFRead(Pg, 'first'); MRFRead(Pg, 'second');
+        R.Get(RowId); Observer.Observe('db.part', R.Value);
+        H.Get(RowId); Observer.Observe('db.host', H.Value);
+        Observer.Observe('case', Identity);
+        Observer.Observe('capture.end', 'COMPLETE');
+        Observer.Finish();
+    end;
+
+    [Test]
+    procedure MRF_NeverRun_DefaultPartInit_Observe()
+    begin
+        Initialize();
+        MRFCase('MRF_NeverRun_DefaultPartInit_Observe', 3010, false);
+    end;
+
+    // Transport-only continuation preserves the preceding buffer.
+    [Test]
+    procedure MRF_NeverRun_DefaultPartInit_Observe_More1()
+    begin Observer.More(); end;
+
+    [Test]
+    [HandlerFunctions('MRFPartHandler')]
+    procedure MRF_HandlerError_DefaultPartInit_Observe()
+    begin
+        Initialize();
+        MRFCase('MRF_HandlerError_DefaultPartInit_Observe', 3011, true);
+    end;
+
+    // Transport-only continuation preserves the preceding buffer.
+    [Test]
+    procedure MRF_HandlerError_DefaultPartInit_Observe_More1()
+    begin Observer.More(); end;
 }
