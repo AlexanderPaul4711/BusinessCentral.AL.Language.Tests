@@ -1201,6 +1201,7 @@ codeunit 92648 "LT Y37 PC Tests"
     procedure MRDialogHandler(var P: TestPage "PAG Modal Writes Dialog")
     var L: Codeunit "PAG Modal Writes Log";
     begin
+        if L.Mode() = 3 then Error('modal lifecycle handler failure');
         if L.Mode() = 2 then begin
             P.Probe.Invoke();
             // A distinct snapshot after the UI action and its refresh pipeline return.
@@ -1486,5 +1487,213 @@ codeunit 92648 "LT Y37 PC Tests"
     begin
         Initialize();
         MRRun('MR_Open_Part_SaveRecord_Direct_Observe', 30, 2, 1, 2, false);
+    end;
+
+    // Lifecycle observations are about values/access, not heap release or OnInit identity.
+    local procedure MRLSeed(RowId: Integer)
+    var H: Record "PAG Modal Writes Host"; R: Record "PAG Modal Writes Line";
+    begin
+        H.Id := RowId; H.Value := 'host-seed'; H.Insert(false);
+        R.Id := RowId; R.Value := 'part-seed'; R.Insert(false);
+    end;
+
+    local procedure MRLSet(RowId: Integer; Mode: Integer)
+    var H: Record "PAG Modal Writes Host"; L: Codeunit "PAG Modal Writes Log";
+    begin
+        L.Configure(Mode, 1, 0, RowId);
+        H.Get(RowId); MRCurrentPage.SetRecord(H);
+    end;
+
+    local procedure MRLDatabase(RowId: Integer): Text
+    var H: Record "PAG Modal Writes Host"; R: Record "PAG Modal Writes Line";
+    begin
+        H.Get(RowId); R.Get(RowId);
+        exit(Format(RowId) + ':H=' + H.Value + ';P=' + R.Value);
+    end;
+
+    [TryFunction]
+    local procedure MRLTryPartSnapshot(var Value: Text)
+    begin Value := MRCurrentPage.Snapshot(1); end;
+
+    local procedure MRLSnapshot(LabelText: Text)
+    var Value: Text; Ok: Boolean; ErrorCode: Text; L: Codeunit "PAG Modal Writes Log";
+    begin
+        Observer.Observe(LabelText + '.trace.before', L.ReadTrace());
+        ClearLastError(); Ok := MRLTryPartSnapshot(Value);
+        if not Ok then ErrorCode := GetLastErrorCode();
+        Observer.Observe(LabelText + '.ok', Format(Ok));
+        Observer.Observe(LabelText + '.error.code', ErrorCode);
+        Observer.Observe(LabelText + '.value', Value);
+        Observer.Observe(LabelText + '.trace.after', L.ReadTrace());
+    end;
+
+    [TryFunction]
+    local procedure MRLTryRun(var Answer: Action)
+    begin Answer := MRCurrentPage.RunModal(); end;
+
+    local procedure MRLRunError()
+    var Answer: Action; Ok: Boolean; ErrorCode: Text;
+    begin
+        ClearLastError(); Ok := MRLTryRun(Answer);
+        if not Ok then ErrorCode := GetLastErrorCode();
+        Observer.Observe('run.ok', Format(Ok));
+        Observer.Observe('run.error.code', ErrorCode);
+        Observer.Observe('run.answer', Format(Answer));
+    end;
+
+    local procedure MRLFinish(Identity: Text)
+    begin
+        Observer.Observe('case', Identity);
+        Observer.Observe('capture.end', 'COMPLETE');
+        Observer.Finish();
+    end;
+
+    [Test]
+    procedure MRL_NeverRun_SetRecord_PartAccess_Observe()
+    begin
+        Initialize();
+        MRLSeed(1010); Clear(MRCurrentPage); MRLSet(1010, 0);
+        Observer.Observe('db.before', MRLDatabase(1010));
+        MRLSnapshot('fresh');
+        Observer.Observe('db.after', MRLDatabase(1010));
+        MRLFinish('MRL_NeverRun_SetRecord_PartAccess_Observe');
+    end;
+
+    // Transport-only continuation: never reset the preceding Observer buffer here.
+    [Test]
+    procedure MRL_NeverRun_SetRecord_PartAccess_Observe_More1()
+    begin
+        Observer.More();
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRL_Clear_AfterModal_PartAccess_Observe()
+    begin
+        Initialize();
+        MRLSeed(1011); Clear(MRCurrentPage); MRLSet(1011, 0);
+        Observer.Observe('first.answer', Format(MRCurrentPage.RunModal()));
+        MRCurrentPage.Dirty(1); MRLSnapshot('before.clear');
+        Observer.Observe('db.before', MRLDatabase(1011));
+        Clear(MRCurrentPage); MRLSnapshot('after.clear');
+        Observer.Observe('db.after', MRLDatabase(1011));
+        MRLFinish('MRL_Clear_AfterModal_PartAccess_Observe');
+    end;
+
+    // Transport-only continuation: never reset the preceding Observer buffer here.
+    [Test]
+    procedure MRL_Clear_AfterModal_PartAccess_Observe_More1()
+    begin
+        Observer.More();
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRL_RepeatOK_SetDifferentRecord_Observe()
+    begin
+        Initialize();
+        MRLSeed(1012); MRLSeed(1013); Clear(MRCurrentPage); MRLSet(1012, 0);
+        Observer.Observe('first.answer', Format(MRCurrentPage.RunModal()));
+        MRCurrentPage.Dirty(1); MRLSnapshot('first');
+        Observer.Observe('first.db.before', MRLDatabase(1012));
+        Observer.Observe('second.db.before', MRLDatabase(1013));
+        MRLSet(1013, 0); Observer.Observe('second.answer', Format(MRCurrentPage.RunModal()));
+        MRLSnapshot('second');
+        Observer.Observe('first.db.after', MRLDatabase(1012));
+        Observer.Observe('second.db.after', MRLDatabase(1013));
+        MRLFinish('MRL_RepeatOK_SetDifferentRecord_Observe');
+    end;
+
+    // Transport-only continuation: never reset the preceding Observer buffer here.
+    [Test]
+    procedure MRL_RepeatOK_SetDifferentRecord_Observe_More1()
+    begin
+        Observer.More();
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRL_RepeatCancel_SetDifferentRecord_Observe()
+    begin
+        Initialize();
+        MRLSeed(1014); MRLSeed(1015); Clear(MRCurrentPage); MRLSet(1014, 1);
+        Observer.Observe('first.answer', Format(MRCurrentPage.RunModal())); MRLSnapshot('first');
+        Observer.Observe('first.db.before', MRLDatabase(1014));
+        Observer.Observe('second.db.before', MRLDatabase(1015));
+        MRLSet(1015, 0); Observer.Observe('second.answer', Format(MRCurrentPage.RunModal()));
+        MRLSnapshot('second');
+        Observer.Observe('first.db.after', MRLDatabase(1014));
+        Observer.Observe('second.db.after', MRLDatabase(1015));
+        MRLFinish('MRL_RepeatCancel_SetDifferentRecord_Observe');
+    end;
+
+    // Transport-only continuation: never reset the preceding Observer buffer here.
+    [Test]
+    procedure MRL_RepeatCancel_SetDifferentRecord_Observe_More1()
+    begin
+        Observer.More();
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRL_FirstRunHandlerError_TryPartAccess_Observe()
+    begin
+        Initialize();
+        MRLSeed(1016); Clear(MRCurrentPage); MRLSet(1016, 3);
+        Observer.Observe('db.before', MRLDatabase(1016));
+        MRLRunError(); MRLSnapshot('after.error');
+        Observer.Observe('db.after', MRLDatabase(1016));
+        MRLFinish('MRL_FirstRunHandlerError_TryPartAccess_Observe');
+    end;
+
+    // Transport-only continuation: never reset the preceding Observer buffer here.
+    [Test]
+    procedure MRL_FirstRunHandlerError_TryPartAccess_Observe_More1()
+    begin
+        Observer.More();
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRL_SecondRunHandlerError_TryPartAccess_Observe()
+    begin
+        Initialize();
+        MRLSeed(1017); MRLSeed(1018); Clear(MRCurrentPage); MRLSet(1017, 0);
+        Observer.Observe('first.answer', Format(MRCurrentPage.RunModal()));
+        MRCurrentPage.Dirty(1); MRLSnapshot('first');
+        Observer.Observe('first.db.before', MRLDatabase(1017));
+        Observer.Observe('second.db.before', MRLDatabase(1018));
+        MRLSet(1018, 3); MRLRunError(); MRLSnapshot('after.error');
+        Observer.Observe('first.db.after', MRLDatabase(1017));
+        Observer.Observe('second.db.after', MRLDatabase(1018));
+        MRLFinish('MRL_SecondRunHandlerError_TryPartAccess_Observe');
+    end;
+
+    // Transport-only continuation: never reset the preceding Observer buffer here.
+    [Test]
+    procedure MRL_SecondRunHandlerError_TryPartAccess_Observe_More1()
+    begin
+        Observer.More();
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRL_RepeatOK_WithoutSetRecord_Observe()
+    begin
+        Initialize();
+        MRLSeed(1019); Clear(MRCurrentPage); MRLSet(1019, 0);
+        Observer.Observe('first.answer', Format(MRCurrentPage.RunModal()));
+        MRCurrentPage.Dirty(1); MRLSnapshot('first');
+        Observer.Observe('db.before', MRLDatabase(1019));
+        Observer.Observe('second.answer', Format(MRCurrentPage.RunModal()));
+        MRLSnapshot('second'); Observer.Observe('db.after', MRLDatabase(1019));
+        MRLFinish('MRL_RepeatOK_WithoutSetRecord_Observe');
+    end;
+
+    // Transport-only continuation: never reset the preceding Observer buffer here.
+    [Test]
+    procedure MRL_RepeatOK_WithoutSetRecord_Observe_More1()
+    begin
+        Observer.More();
     end;
 }
