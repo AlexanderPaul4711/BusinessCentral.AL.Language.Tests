@@ -93,3 +93,7 @@ A new topic gets a line here in the same pull request (standing rule 8 in CONTRI
 The CLP_Detail_AGCR contracts assert complete opt-in parent Rec/AGCR/query telemetry before cleanup and separate follow-up observations, captured identically on native BC27.5/28.5/29.0 at writer40348e72. Existing close-part contracts stay unchanged.
 
 The follow-action contracts freeze the pre-invoke external field result, observes a read-only action and then freezes the post-invoke field and trace suffix. Action preprocessing may affect the AL Rec, so the action marker does not prove its pre-invoke value. Bootstrap-only More1 transport methods are absent from the asserted contracts; their original40348e72 raw captures remain separately bound.
+
+`parts/TestModalReturnedWrites.al` adds observe-only dirty-record contrasts after normal modal OK/Cancel, with independently frozen open-action controls. Test methods append to the existing Y37 codeunit; direct calls and TryFunction error-context contrasts are separate. This bootstrap does not assert no-op, save, refresh or durability semantics.
+
+Snapshots retain the held Rec key separately and always read the database through the immutable configured case RowId. Open-action controls retain both the in-action snapshot and a page-variable snapshot after Invoke returns, before closing. Direct setter/precondition errors are distinct from operation refusal; TryFunction wraps only the separately named operation contrast. No repeatability outside the native test isolation context is claimed.

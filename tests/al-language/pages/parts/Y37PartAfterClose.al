@@ -1192,4 +1192,299 @@ codeunit 92648 "LT Y37 PC Tests"
                 Error('Unknown detailed close observation: %1', Identity);
         end;
     end;
+
+    var
+        MRCurrentPage: Page "PAG Modal Writes Dialog";
+
+    // Separate direct and TryFunction call contexts; no TryFunction rollback/durability claim.
+    [ModalPageHandler]
+    procedure MRDialogHandler(var P: TestPage "PAG Modal Writes Dialog")
+    var L: Codeunit "PAG Modal Writes Log";
+    begin
+        if L.Mode() = 2 then begin
+            P.Probe.Invoke();
+            // A distinct snapshot after the UI action and its refresh pipeline return.
+            L.AfterInvoke(MRCurrentPage.Snapshot(L.Side()), L.ReadTrace());
+        end;
+        if L.Mode() = 1 then P.Cancel().Invoke() else P.OK().Invoke();
+    end;
+
+    [TryFunction]
+    local procedure MRTryOperate(var Pg: Page "PAG Modal Writes Dialog"; Side: Integer; Op: Integer)
+    begin Pg.Operate(Side, Op); end;
+
+    local procedure MRRun(Identity: Text; RowId: Integer; Mode: Integer; Side: Integer; Op: Integer; CatchOperation: Boolean)
+    var H: Record "PAG Modal Writes Host"; R: Record "PAG Modal Writes Line";
+        L: Codeunit "PAG Modal Writes Log";
+        ResultAction: Action; OperationOk: Boolean; OperationCode: Text;
+    begin
+        Clear(MRCurrentPage); L.Configure(Mode, Side, Op, RowId);
+        H.Id := RowId; H.Value := 'host-seed'; H.Insert(false);
+        R.Id := RowId; R.Value := 'part-seed'; R.Insert(false);
+        MRCurrentPage.SetRecord(H); MRCurrentPage.LookupMode := true;
+        ResultAction := MRCurrentPage.RunModal();
+        Observer.Observe('case', Identity);
+        Observer.Observe('returned', Format(ResultAction));
+        if Mode = 2 then begin
+            Observer.Observe('before', L.BeforeText());
+            Observer.Observe('after', L.AfterText());
+            Observer.Observe('trace.in-action', L.OperationTrace());
+            Observer.Observe('after.invoke', L.AfterInvokeText());
+            Observer.Observe('trace.after-invoke', L.AfterInvokeTraceText());
+        end else begin
+            // The decisive dirty assignment occurs AFTER modal close, excluding save-on-close.
+            L.ResetTrace(); MRCurrentPage.Dirty(Side);
+            Observer.Observe('before', MRCurrentPage.Snapshot(Side));
+            if CatchOperation then begin
+                ClearLastError(); OperationOk := MRTryOperate(MRCurrentPage, Side, Op);
+                if not OperationOk then OperationCode := GetLastErrorCode();
+                Observer.Observe('try.ok', Format(OperationOk));
+                Observer.Observe('try.error.code', OperationCode);
+            end else MRCurrentPage.Operate(Side, Op);
+            Observer.Observe('after', MRCurrentPage.Snapshot(Side));
+            Observer.Observe('trace', L.ReadTrace());
+        end;
+        Observer.Observe('capture.end', 'COMPLETE');
+        Observer.Finish();
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_OK_Host_UpdateFalse_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_OK_Host_UpdateFalse_Direct_Observe', 1, 0, 0, 0, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_OK_Host_UpdateTrue_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_OK_Host_UpdateTrue_Direct_Observe', 2, 0, 0, 1, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_OK_Host_SaveRecord_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_OK_Host_SaveRecord_Direct_Observe', 3, 0, 0, 2, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_OK_Part_UpdateFalse_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_OK_Part_UpdateFalse_Direct_Observe', 4, 0, 1, 0, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_OK_Part_UpdateTrue_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_OK_Part_UpdateTrue_Direct_Observe', 5, 0, 1, 1, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_OK_Part_SaveRecord_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_OK_Part_SaveRecord_Direct_Observe', 6, 0, 1, 2, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Cancel_Host_UpdateFalse_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Cancel_Host_UpdateFalse_Direct_Observe', 7, 1, 0, 0, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Cancel_Host_UpdateTrue_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Cancel_Host_UpdateTrue_Direct_Observe', 8, 1, 0, 1, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Cancel_Host_SaveRecord_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Cancel_Host_SaveRecord_Direct_Observe', 9, 1, 0, 2, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Cancel_Part_UpdateFalse_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Cancel_Part_UpdateFalse_Direct_Observe', 10, 1, 1, 0, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Cancel_Part_UpdateTrue_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Cancel_Part_UpdateTrue_Direct_Observe', 11, 1, 1, 1, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Cancel_Part_SaveRecord_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Cancel_Part_SaveRecord_Direct_Observe', 12, 1, 1, 2, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_OK_Host_UpdateFalse_Try_Observe()
+    begin
+        Initialize();
+        MRRun('MR_OK_Host_UpdateFalse_Try_Observe', 13, 0, 0, 0, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_OK_Host_UpdateTrue_Try_Observe()
+    begin
+        Initialize();
+        MRRun('MR_OK_Host_UpdateTrue_Try_Observe', 14, 0, 0, 1, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_OK_Host_SaveRecord_Try_Observe()
+    begin
+        Initialize();
+        MRRun('MR_OK_Host_SaveRecord_Try_Observe', 15, 0, 0, 2, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_OK_Part_UpdateFalse_Try_Observe()
+    begin
+        Initialize();
+        MRRun('MR_OK_Part_UpdateFalse_Try_Observe', 16, 0, 1, 0, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_OK_Part_UpdateTrue_Try_Observe()
+    begin
+        Initialize();
+        MRRun('MR_OK_Part_UpdateTrue_Try_Observe', 17, 0, 1, 1, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_OK_Part_SaveRecord_Try_Observe()
+    begin
+        Initialize();
+        MRRun('MR_OK_Part_SaveRecord_Try_Observe', 18, 0, 1, 2, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Cancel_Host_UpdateFalse_Try_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Cancel_Host_UpdateFalse_Try_Observe', 19, 1, 0, 0, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Cancel_Host_UpdateTrue_Try_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Cancel_Host_UpdateTrue_Try_Observe', 20, 1, 0, 1, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Cancel_Host_SaveRecord_Try_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Cancel_Host_SaveRecord_Try_Observe', 21, 1, 0, 2, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Cancel_Part_UpdateFalse_Try_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Cancel_Part_UpdateFalse_Try_Observe', 22, 1, 1, 0, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Cancel_Part_UpdateTrue_Try_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Cancel_Part_UpdateTrue_Try_Observe', 23, 1, 1, 1, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Cancel_Part_SaveRecord_Try_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Cancel_Part_SaveRecord_Try_Observe', 24, 1, 1, 2, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Open_Host_UpdateFalse_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Open_Host_UpdateFalse_Direct_Observe', 25, 2, 0, 0, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Open_Host_UpdateTrue_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Open_Host_UpdateTrue_Direct_Observe', 26, 2, 0, 1, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Open_Host_SaveRecord_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Open_Host_SaveRecord_Direct_Observe', 27, 2, 0, 2, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Open_Part_UpdateFalse_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Open_Part_UpdateFalse_Direct_Observe', 28, 2, 1, 0, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Open_Part_UpdateTrue_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Open_Part_UpdateTrue_Direct_Observe', 29, 2, 1, 1, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MR_Open_Part_SaveRecord_Direct_Observe()
+    begin
+        Initialize();
+        MRRun('MR_Open_Part_SaveRecord_Direct_Observe', 30, 2, 1, 2, false);
+    end;
 }
