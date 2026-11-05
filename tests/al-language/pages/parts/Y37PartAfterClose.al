@@ -2566,7 +2566,7 @@ codeunit 92648 "LT Y37 PC Tests"
         Observer.Observe('after.visible', MRHPage.VisibleSnapshot());
         Observer.Observe('after.read.trace', L.ReadTrace());
         H.Get(RowId); Observer.Observe('db.host', H.Value);
-        Observer.Observe('capture.end', 'COMPLETE'); Observer.Finish();
+        Observer.Observe('capture.end', 'COMPLETE'); MRViewExpect(Identity); Observer.Verify();
     end;
 
     [Test]
@@ -2577,10 +2577,6 @@ codeunit 92648 "LT Y37 PC Tests"
         MRHCase('MRH_AfterModal_Hidden_UpdateFalse_Observe', 4010, 0);
     end;
 
-    // Transport-only continuation preserves the complete preceding observation.
-    [Test]
-    procedure MRH_AfterModal_Hidden_UpdateFalse_Observe_More1()
-    begin Observer.More(); end;
 
     [Test]
     [HandlerFunctions('MRHHandler')]
@@ -2590,10 +2586,6 @@ codeunit 92648 "LT Y37 PC Tests"
         MRHCase('MRH_AfterModal_Hidden_UpdateTrue_Observe', 4011, 1);
     end;
 
-    // Transport-only continuation preserves the complete preceding observation.
-    [Test]
-    procedure MRH_AfterModal_Hidden_UpdateTrue_Observe_More1()
-    begin Observer.More(); end;
 
     [Test]
     [HandlerFunctions('MRHHandler')]
@@ -2603,10 +2595,6 @@ codeunit 92648 "LT Y37 PC Tests"
         MRHCase('MRH_AfterModal_Hidden_SaveRecord_Observe', 4012, 2);
     end;
 
-    // Transport-only continuation preserves the complete preceding observation.
-    [Test]
-    procedure MRH_AfterModal_Hidden_SaveRecord_Observe_More1()
-    begin Observer.More(); end;
     var RRPage: Page "PAG Modal Root Abort"; RRMode: Integer; RRAnswer: Action;
         RRInitialId: Integer; RRNextId: Integer; RRNextResult: Boolean; RRNextReturned: Boolean;
         RRHandlerRoot: Text; RRHandlerTrace: Text; RRBeforeReturnPhase: Text; RRBeforeReturnTrace: Text;
@@ -2686,7 +2674,7 @@ codeunit 92648 "LT Y37 PC Tests"
         Observer.Observe('handler.before.return.phase', RRBeforeReturnPhase); Observer.Observe('handler.before.return.trace', RRBeforeReturnTrace);
         H.Get(RowId); Observer.Observe('db.host.first', H.Value); H.Get(RowId + 1); Observer.Observe('db.host.second', H.Value);
         R.Get(RowId); Observer.Observe('db.part.first', R.Value); R.Get(RowId + 1); Observer.Observe('db.part.second', R.Value);
-        Observer.Observe('case', Identity); Observer.Observe('capture.end', 'COMPLETE'); Observer.Finish();
+        Observer.Observe('case', Identity); Observer.Observe('capture.end', 'COMPLETE'); MRViewExpect(Identity); Observer.Verify();
     end;
 
     [Test]
@@ -2694,58 +2682,270 @@ codeunit 92648 "LT Y37 PC Tests"
     procedure RR_NormalOK_Observe()
     begin Initialize(); RRCase('RR_NormalOK_Observe', 5010, 0); end;
 
-    // Transport-only continuation; no additional semantic case.
-    [Test]
-    procedure RR_NormalOK_Observe_More1()
-    begin Observer.More(); end;
 
-    // Transport-only continuation; no additional semantic case.
-    [Test]
-    procedure RR_NormalOK_Observe_More2()
-    begin Observer.More(); end;
 
     [Test]
     [HandlerFunctions('RRHandler')]
     procedure RR_HandlerDialog_Observe()
     begin Initialize(); RRCase('RR_HandlerDialog_Observe', 5020, 1); end;
 
-    // Transport-only continuation; no additional semantic case.
-    [Test]
-    procedure RR_HandlerDialog_Observe_More1()
-    begin Observer.More(); end;
 
-    // Transport-only continuation; no additional semantic case.
-    [Test]
-    procedure RR_HandlerDialog_Observe_More2()
-    begin Observer.More(); end;
 
     [Test]
     [HandlerFunctions('RRHandler')]
     procedure RR_RowInvokeDirect_Observe()
     begin Initialize(); RRCase('RR_RowInvokeDirect_Observe', 5030, 2); end;
 
-    // Transport-only continuation; no additional semantic case.
-    [Test]
-    procedure RR_RowInvokeDirect_Observe_More1()
-    begin Observer.More(); end;
 
-    // Transport-only continuation; no additional semantic case.
-    [Test]
-    procedure RR_RowInvokeDirect_Observe_More2()
-    begin Observer.More(); end;
 
     [Test]
     [HandlerFunctions('RRHandler')]
     procedure RR_RowInvokeTryCaught_Observe()
     begin Initialize(); RRCase('RR_RowInvokeTryCaught_Observe', 5040, 3); end;
 
-    // Transport-only continuation; no additional semantic case.
-    [Test]
-    procedure RR_RowInvokeTryCaught_Observe_More1()
-    begin Observer.More(); end;
 
-    // Transport-only continuation; no additional semantic case.
-    [Test]
-    procedure RR_RowInvokeTryCaught_Observe_More2()
-    begin Observer.More(); end;
+
+    // Exact ordered pairs retained from all three source-bound native runs.
+    local procedure MRViewExpect(Identity: Text)
+    begin
+        case Identity of
+            'MRH_AfterModal_Hidden_UpdateFalse_Observe':
+                begin
+                    Observer.Expect('case', 'MRH_AfterModal_Hidden_UpdateFalse_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('opened.a.id', '4010');
+                    Observer.Expect('opened.a.snapshot', '4010:part-seed/db@4010:part-seed');
+                    Observer.Expect('a.visible.after.switch', 'No');
+                    Observer.Expect('b.visible.after.switch', 'Yes');
+                    Observer.Expect('visible.b.id', '4010');
+                    Observer.Expect('before.close.trace', 'HA.INIT;HB.INIT;HP.OPEN;HA.OPEN;HB.OPEN;HP.AGR;HP.AGCR;HA.AGR;HA.AGR;HA.AGCR;HB.AGR;HB.AGR;HB.AGCR;HB.AGR;HB.AGR;HB.AGCR;');
+                    Observer.Expect('after.close.trace', 'HA.INIT;HB.INIT;HP.OPEN;HA.OPEN;HB.OPEN;HP.AGR;HP.AGCR;HA.AGR;HA.AGR;HA.AGCR;HB.AGR;HB.AGR;HB.AGCR;HB.AGR;HB.AGR;HB.AGCR;HP.CLOSE;');
+                    Observer.Expect('before.dirty.trace', '');
+                    Observer.Expect('before.hidden', '4010:part-dirty/db@4010:part-seed');
+                    Observer.Expect('before.visible', '4010:part-seed/db@4010:part-seed');
+                    Observer.Expect('operation.trace', 'HA.DIRTY;');
+                    Observer.Expect('after.hidden', '4010:part-dirty/db@4010:part-seed');
+                    Observer.Expect('after.visible', '4010:part-seed/db@4010:part-seed');
+                    Observer.Expect('after.read.trace', 'HA.DIRTY;');
+                    Observer.Expect('db.host', 'host-seed');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRH_AfterModal_Hidden_UpdateTrue_Observe':
+                begin
+                    Observer.Expect('case', 'MRH_AfterModal_Hidden_UpdateTrue_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('opened.a.id', '4011');
+                    Observer.Expect('opened.a.snapshot', '4011:part-seed/db@4011:part-seed');
+                    Observer.Expect('a.visible.after.switch', 'No');
+                    Observer.Expect('b.visible.after.switch', 'Yes');
+                    Observer.Expect('visible.b.id', '4011');
+                    Observer.Expect('before.close.trace', 'HA.INIT;HB.INIT;HP.OPEN;HA.OPEN;HB.OPEN;HP.AGR;HP.AGCR;HA.AGR;HA.AGR;HA.AGCR;HB.AGR;HB.AGR;HB.AGCR;HB.AGR;HB.AGR;HB.AGCR;');
+                    Observer.Expect('after.close.trace', 'HA.INIT;HB.INIT;HP.OPEN;HA.OPEN;HB.OPEN;HP.AGR;HP.AGCR;HA.AGR;HA.AGR;HA.AGCR;HB.AGR;HB.AGR;HB.AGCR;HB.AGR;HB.AGR;HB.AGCR;HP.CLOSE;');
+                    Observer.Expect('before.dirty.trace', '');
+                    Observer.Expect('before.hidden', '4011:part-dirty/db@4011:part-seed');
+                    Observer.Expect('before.visible', '4011:part-seed/db@4011:part-seed');
+                    Observer.Expect('operation.trace', 'HA.DIRTY;HA.PAGE.MODIFY;P.TABLE.MODIFY;');
+                    Observer.Expect('after.hidden', '4011:part-dirty/db@4011:part-dirty');
+                    Observer.Expect('after.visible', '4011:part-seed/db@4011:part-dirty');
+                    Observer.Expect('after.read.trace', 'HA.DIRTY;HA.PAGE.MODIFY;P.TABLE.MODIFY;');
+                    Observer.Expect('db.host', 'host-seed');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRH_AfterModal_Hidden_SaveRecord_Observe':
+                begin
+                    Observer.Expect('case', 'MRH_AfterModal_Hidden_SaveRecord_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('opened.a.id', '4012');
+                    Observer.Expect('opened.a.snapshot', '4012:part-seed/db@4012:part-seed');
+                    Observer.Expect('a.visible.after.switch', 'No');
+                    Observer.Expect('b.visible.after.switch', 'Yes');
+                    Observer.Expect('visible.b.id', '4012');
+                    Observer.Expect('before.close.trace', 'HA.INIT;HB.INIT;HP.OPEN;HA.OPEN;HB.OPEN;HP.AGR;HP.AGCR;HA.AGR;HA.AGR;HA.AGCR;HB.AGR;HB.AGR;HB.AGCR;HB.AGR;HB.AGR;HB.AGCR;');
+                    Observer.Expect('after.close.trace', 'HA.INIT;HB.INIT;HP.OPEN;HA.OPEN;HB.OPEN;HP.AGR;HP.AGCR;HA.AGR;HA.AGR;HA.AGCR;HB.AGR;HB.AGR;HB.AGCR;HB.AGR;HB.AGR;HB.AGCR;HP.CLOSE;');
+                    Observer.Expect('before.dirty.trace', '');
+                    Observer.Expect('before.hidden', '4012:part-dirty/db@4012:part-seed');
+                    Observer.Expect('before.visible', '4012:part-seed/db@4012:part-seed');
+                    Observer.Expect('operation.trace', 'HA.DIRTY;HA.PAGE.MODIFY;P.TABLE.MODIFY;');
+                    Observer.Expect('after.hidden', '4012:part-dirty/db@4012:part-dirty');
+                    Observer.Expect('after.visible', '4012:part-seed/db@4012:part-dirty');
+                    Observer.Expect('after.read.trace', 'HA.DIRTY;HA.PAGE.MODIFY;P.TABLE.MODIFY;');
+                    Observer.Expect('db.host', 'host-seed');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'RR_NormalOK_Observe':
+                begin
+                    Observer.Expect('prepared.root', '1/0/prepared/5010/host-first');
+                    Observer.Expect('run.ok', 'Yes');
+                    Observer.Expect('run.error.code', '');
+                    Observer.Expect('run.error.text', '');
+                    Observer.Expect('run.answer', 'LookupOK');
+                    Observer.Expect('trace.after.run', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5010;Q.AGR;Q.AGR;Q.AGCR;RR.HANDLER.RETURN;');
+                    Observer.Expect('root.trace.before', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5010;Q.AGR;Q.AGR;Q.AGCR;RR.HANDLER.RETURN;');
+                    Observer.Expect('root.ok', 'Yes');
+                    Observer.Expect('root.error.code', '');
+                    Observer.Expect('root.error.text', '');
+                    Observer.Expect('root.value', '1/1/opened/5010/host-first');
+                    Observer.Expect('root.trace.after', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5010;Q.AGR;Q.AGR;Q.AGCR;RR.HANDLER.RETURN;');
+                    Observer.Expect('part.first.trace.before', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5010;Q.AGR;Q.AGR;Q.AGCR;RR.HANDLER.RETURN;');
+                    Observer.Expect('part.first.ok', 'Yes');
+                    Observer.Expect('part.first.error.code', '');
+                    Observer.Expect('part.first.error.text', '');
+                    Observer.Expect('part.first.value', '1/1/5010/part-first');
+                    Observer.Expect('part.first.trace.after', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5010;Q.AGR;Q.AGR;Q.AGCR;RR.HANDLER.RETURN;');
+                    Observer.Expect('part.second.trace.before', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5010;Q.AGR;Q.AGR;Q.AGCR;RR.HANDLER.RETURN;');
+                    Observer.Expect('part.second.ok', 'Yes');
+                    Observer.Expect('part.second.error.code', '');
+                    Observer.Expect('part.second.error.text', '');
+                    Observer.Expect('part.second.value', '1/1/5010/part-first');
+                    Observer.Expect('part.second.trace.after', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5010;Q.AGR;Q.AGR;Q.AGCR;RR.HANDLER.RETURN;');
+                    Observer.Expect('handler.initial.id', '5010');
+                    Observer.Expect('handler.root', '1/1/opened/5010/host-first');
+                    Observer.Expect('handler.trace', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5010;Q.AGR;Q.AGR;Q.AGCR;');
+                    Observer.Expect('next.target.id', '5011');
+                    Observer.Expect('next.returned', 'No');
+                    Observer.Expect('next.reached.id', '-1');
+                    Observer.Expect('inner.ok', 'No');
+                    Observer.Expect('inner.error.code', '');
+                    Observer.Expect('inner.error.text', '');
+                    Observer.Expect('handler.before.return.phase', '');
+                    Observer.Expect('handler.before.return.trace', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5010;Q.AGR;Q.AGR;Q.AGCR;RR.HANDLER.RETURN;');
+                    Observer.Expect('db.host.first', 'host-first');
+                    Observer.Expect('db.host.second', 'host-second');
+                    Observer.Expect('db.part.first', 'part-first');
+                    Observer.Expect('db.part.second', 'part-second');
+                    Observer.Expect('case', 'RR_NormalOK_Observe');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'RR_HandlerDialog_Observe':
+                begin
+                    Observer.Expect('prepared.root', '1/0/prepared/5020/host-first');
+                    Observer.Expect('run.ok', 'No');
+                    Observer.Expect('run.error.code', 'Dialog');
+                    Observer.Expect('run.error.text', 'direct root handler failure');
+                    Observer.Expect('trace.after.run', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5020;Q.AGR;Q.AGR;Q.AGCR;RR.HANDLER.ERROR;');
+                    Observer.Expect('root.trace.before', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5020;Q.AGR;Q.AGR;Q.AGCR;RR.HANDLER.ERROR;');
+                    Observer.Expect('root.ok', 'Yes');
+                    Observer.Expect('root.error.code', '');
+                    Observer.Expect('root.error.text', '');
+                    Observer.Expect('root.value', '1/0/initialized/0/');
+                    Observer.Expect('root.trace.after', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5020;Q.AGR;Q.AGR;Q.AGCR;RR.HANDLER.ERROR;RR.INIT;');
+                    Observer.Expect('part.first.trace.before', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5020;Q.AGR;Q.AGR;Q.AGCR;RR.HANDLER.ERROR;RR.INIT;');
+                    Observer.Expect('part.first.ok', 'Yes');
+                    Observer.Expect('part.first.error.code', '');
+                    Observer.Expect('part.first.error.text', '');
+                    Observer.Expect('part.first.value', '1/0/0/');
+                    Observer.Expect('part.first.trace.after', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5020;Q.AGR;Q.AGR;Q.AGCR;RR.HANDLER.ERROR;RR.INIT;Q.INIT;');
+                    Observer.Expect('part.second.trace.before', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5020;Q.AGR;Q.AGR;Q.AGCR;RR.HANDLER.ERROR;RR.INIT;Q.INIT;');
+                    Observer.Expect('part.second.ok', 'Yes');
+                    Observer.Expect('part.second.error.code', '');
+                    Observer.Expect('part.second.error.text', '');
+                    Observer.Expect('part.second.value', '1/0/0/');
+                    Observer.Expect('part.second.trace.after', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5020;Q.AGR;Q.AGR;Q.AGCR;RR.HANDLER.ERROR;RR.INIT;Q.INIT;');
+                    Observer.Expect('handler.initial.id', '5020');
+                    Observer.Expect('handler.root', '1/1/opened/5020/host-first');
+                    Observer.Expect('handler.trace', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5020;Q.AGR;Q.AGR;Q.AGCR;');
+                    Observer.Expect('next.target.id', '5021');
+                    Observer.Expect('next.returned', 'No');
+                    Observer.Expect('next.reached.id', '-1');
+                    Observer.Expect('inner.ok', 'No');
+                    Observer.Expect('inner.error.code', '');
+                    Observer.Expect('inner.error.text', '');
+                    Observer.Expect('handler.before.return.phase', '');
+                    Observer.Expect('handler.before.return.trace', '');
+                    Observer.Expect('db.host.first', 'host-first');
+                    Observer.Expect('db.host.second', 'host-second');
+                    Observer.Expect('db.part.first', 'part-first');
+                    Observer.Expect('db.part.second', 'part-second');
+                    Observer.Expect('case', 'RR_HandlerDialog_Observe');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'RR_RowInvokeDirect_Observe':
+                begin
+                    Observer.Expect('prepared.root', '1/0/prepared/5030/host-first');
+                    Observer.Expect('run.ok', 'No');
+                    Observer.Expect('run.error.code', 'ClientPageAbort:FormAbort');
+                    Observer.Expect('run.error.text', 'root row handler failure');
+                    Observer.Expect('trace.after.run', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5030;Q.AGR;Q.AGR;Q.AGCR;RR.NEXT.ENTER;RR.AGCR.5031;RR.ROW.ERROR;');
+                    Observer.Expect('root.trace.before', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5030;Q.AGR;Q.AGR;Q.AGCR;RR.NEXT.ENTER;RR.AGCR.5031;RR.ROW.ERROR;');
+                    Observer.Expect('root.ok', 'Yes');
+                    Observer.Expect('root.error.code', '');
+                    Observer.Expect('root.error.text', '');
+                    Observer.Expect('root.value', '1/0/initialized/0/');
+                    Observer.Expect('root.trace.after', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5030;Q.AGR;Q.AGR;Q.AGCR;RR.NEXT.ENTER;RR.AGCR.5031;RR.ROW.ERROR;RR.INIT;');
+                    Observer.Expect('part.first.trace.before', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5030;Q.AGR;Q.AGR;Q.AGCR;RR.NEXT.ENTER;RR.AGCR.5031;RR.ROW.ERROR;RR.INIT;');
+                    Observer.Expect('part.first.ok', 'Yes');
+                    Observer.Expect('part.first.error.code', '');
+                    Observer.Expect('part.first.error.text', '');
+                    Observer.Expect('part.first.value', '1/0/0/');
+                    Observer.Expect('part.first.trace.after', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5030;Q.AGR;Q.AGR;Q.AGCR;RR.NEXT.ENTER;RR.AGCR.5031;RR.ROW.ERROR;RR.INIT;Q.INIT;');
+                    Observer.Expect('part.second.trace.before', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5030;Q.AGR;Q.AGR;Q.AGCR;RR.NEXT.ENTER;RR.AGCR.5031;RR.ROW.ERROR;RR.INIT;Q.INIT;');
+                    Observer.Expect('part.second.ok', 'Yes');
+                    Observer.Expect('part.second.error.code', '');
+                    Observer.Expect('part.second.error.text', '');
+                    Observer.Expect('part.second.value', '1/0/0/');
+                    Observer.Expect('part.second.trace.after', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5030;Q.AGR;Q.AGR;Q.AGCR;RR.NEXT.ENTER;RR.AGCR.5031;RR.ROW.ERROR;RR.INIT;Q.INIT;');
+                    Observer.Expect('handler.initial.id', '5030');
+                    Observer.Expect('handler.root', '1/1/opened/5030/host-first');
+                    Observer.Expect('handler.trace', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5030;Q.AGR;Q.AGR;Q.AGCR;');
+                    Observer.Expect('next.target.id', '5031');
+                    Observer.Expect('next.returned', 'No');
+                    Observer.Expect('next.reached.id', '-1');
+                    Observer.Expect('inner.ok', 'No');
+                    Observer.Expect('inner.error.code', '');
+                    Observer.Expect('inner.error.text', '');
+                    Observer.Expect('handler.before.return.phase', '');
+                    Observer.Expect('handler.before.return.trace', '');
+                    Observer.Expect('db.host.first', 'host-first');
+                    Observer.Expect('db.host.second', 'host-second');
+                    Observer.Expect('db.part.first', 'part-first');
+                    Observer.Expect('db.part.second', 'part-second');
+                    Observer.Expect('case', 'RR_RowInvokeDirect_Observe');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'RR_RowInvokeTryCaught_Observe':
+                begin
+                    Observer.Expect('prepared.root', '1/0/prepared/5040/host-first');
+                    Observer.Expect('run.ok', 'No');
+                    Observer.Expect('run.error.code', 'ClientPageAbort:FormAbort');
+                    Observer.Expect('run.error.text', 'root row handler failure');
+                    Observer.Expect('trace.after.run', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5040;Q.AGR;Q.AGR;Q.AGCR;RR.TRY.NEXT.ENTER;RR.AGCR.5041;RR.ROW.ERROR;');
+                    Observer.Expect('root.trace.before', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5040;Q.AGR;Q.AGR;Q.AGCR;RR.TRY.NEXT.ENTER;RR.AGCR.5041;RR.ROW.ERROR;');
+                    Observer.Expect('root.ok', 'Yes');
+                    Observer.Expect('root.error.code', '');
+                    Observer.Expect('root.error.text', '');
+                    Observer.Expect('root.value', '1/0/initialized/0/');
+                    Observer.Expect('root.trace.after', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5040;Q.AGR;Q.AGR;Q.AGCR;RR.TRY.NEXT.ENTER;RR.AGCR.5041;RR.ROW.ERROR;RR.INIT;');
+                    Observer.Expect('part.first.trace.before', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5040;Q.AGR;Q.AGR;Q.AGCR;RR.TRY.NEXT.ENTER;RR.AGCR.5041;RR.ROW.ERROR;RR.INIT;');
+                    Observer.Expect('part.first.ok', 'Yes');
+                    Observer.Expect('part.first.error.code', '');
+                    Observer.Expect('part.first.error.text', '');
+                    Observer.Expect('part.first.value', '1/0/0/');
+                    Observer.Expect('part.first.trace.after', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5040;Q.AGR;Q.AGR;Q.AGCR;RR.TRY.NEXT.ENTER;RR.AGCR.5041;RR.ROW.ERROR;RR.INIT;Q.INIT;');
+                    Observer.Expect('part.second.trace.before', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5040;Q.AGR;Q.AGR;Q.AGCR;RR.TRY.NEXT.ENTER;RR.AGCR.5041;RR.ROW.ERROR;RR.INIT;Q.INIT;');
+                    Observer.Expect('part.second.ok', 'Yes');
+                    Observer.Expect('part.second.error.code', '');
+                    Observer.Expect('part.second.error.text', '');
+                    Observer.Expect('part.second.value', '1/0/0/');
+                    Observer.Expect('part.second.trace.after', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5040;Q.AGR;Q.AGR;Q.AGCR;RR.TRY.NEXT.ENTER;RR.AGCR.5041;RR.ROW.ERROR;RR.INIT;Q.INIT;');
+                    Observer.Expect('handler.initial.id', '5040');
+                    Observer.Expect('handler.root', '1/1/opened/5040/host-first');
+                    Observer.Expect('handler.trace', 'RR.INIT;Q.INIT;RR.OPEN;Q.OPEN;RR.AGCR.5040;Q.AGR;Q.AGR;Q.AGCR;');
+                    Observer.Expect('next.target.id', '5041');
+                    Observer.Expect('next.returned', 'No');
+                    Observer.Expect('next.reached.id', '-1');
+                    Observer.Expect('inner.ok', 'No');
+                    Observer.Expect('inner.error.code', '');
+                    Observer.Expect('inner.error.text', '');
+                    Observer.Expect('handler.before.return.phase', '');
+                    Observer.Expect('handler.before.return.trace', '');
+                    Observer.Expect('db.host.first', 'host-first');
+                    Observer.Expect('db.host.second', 'host-second');
+                    Observer.Expect('db.part.first', 'part-first');
+                    Observer.Expect('db.part.second', 'part-second');
+                    Observer.Expect('case', 'RR_RowInvokeTryCaught_Observe');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            else Error('Unknown modal view contract: %1', Identity);
+        end;
+    end;
 }
