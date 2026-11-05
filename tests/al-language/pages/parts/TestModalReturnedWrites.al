@@ -104,11 +104,20 @@ codeunit 92665 "PAG Modal Writes Log"
 {
     SingleInstance = true;
     var ModeValue: Integer; SideValue: Integer; OpValue: Integer; TraceValue: Text;
+        PhaseValue: Text; TryOkValue: Text; TryCodeValue: Text; ReturnedValue: Text;
         BeforeValue: Text; AfterValue: Text; FrozenTrace: Text; RowIdValue: Integer; AfterInvokeValue: Text; AfterInvokeTrace: Text;
     procedure Configure(Mode: Integer; TargetSide: Integer; Op: Integer; ExpectedRowId: Integer)
     begin ModeValue := Mode; SideValue := TargetSide; OpValue := Op;
+        PhaseValue := ''; TryOkValue := ''; TryCodeValue := ''; ReturnedValue := '';
         BeforeValue := ''; AfterValue := ''; FrozenTrace := ''; TraceValue := '';
         RowIdValue := ExpectedRowId; AfterInvokeValue := ''; AfterInvokeTrace := ''; end;
+    procedure Phase(Value: Text) begin PhaseValue := Value; end;
+    procedure ReadPhase(): Text begin exit(PhaseValue); end;
+    procedure TryResult(Ok: Text; Code: Text) begin TryOkValue := Ok; TryCodeValue := Code; end;
+    procedure TryOkText(): Text begin exit(TryOkValue); end;
+    procedure TryCodeText(): Text begin exit(TryCodeValue); end;
+    procedure Returned(Value: Text) begin ReturnedValue := Value; end;
+    procedure ReturnedText(): Text begin exit(ReturnedValue); end;
     procedure RowId(): Integer begin exit(RowIdValue); end;
     procedure AfterInvoke(Value: Text; Trace: Text) begin AfterInvokeValue := Value; AfterInvokeTrace := Trace; end;
     procedure AfterInvokeText(): Text begin exit(AfterInvokeValue); end;

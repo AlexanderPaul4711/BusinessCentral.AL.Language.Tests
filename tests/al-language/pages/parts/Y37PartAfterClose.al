@@ -1202,6 +1202,7 @@ codeunit 92648 "LT Y37 PC Tests"
     var L: Codeunit "PAG Modal Writes Log";
     begin
         if L.Mode() = 3 then Error('modal lifecycle handler failure');
+        if L.Mode() in [4, 5] then MROwnHandler();
         if L.Mode() = 2 then begin
             P.Probe.Invoke();
             // A distinct snapshot after the UI action and its refresh pipeline return.
@@ -1214,7 +1215,7 @@ codeunit 92648 "LT Y37 PC Tests"
     local procedure MRTryOperate(var Pg: Page "PAG Modal Writes Dialog"; Side: Integer; Op: Integer)
     begin Pg.Operate(Side, Op); end;
 
-    local procedure MRRun(Identity: Text; RowId: Integer; Mode: Integer; Side: Integer; Op: Integer; CatchOperation: Boolean)
+    local procedure MRRunWithoutFinish(Identity: Text; RowId: Integer; Mode: Integer; Side: Integer; Op: Integer; CatchOperation: Boolean)
     var H: Record "PAG Modal Writes Host"; R: Record "PAG Modal Writes Line";
         L: Codeunit "PAG Modal Writes Log";
         ResultAction: Action; OperationOk: Boolean; OperationCode: Text;
@@ -1236,16 +1237,23 @@ codeunit 92648 "LT Y37 PC Tests"
             // The decisive dirty assignment occurs AFTER modal close, excluding save-on-close.
             L.ResetTrace(); MRCurrentPage.Dirty(Side);
             Observer.Observe('before', MRCurrentPage.Snapshot(Side));
+            L.Phase('before-post-operation');
             if CatchOperation then begin
                 ClearLastError(); OperationOk := MRTryOperate(MRCurrentPage, Side, Op);
                 if not OperationOk then OperationCode := GetLastErrorCode();
                 Observer.Observe('try.ok', Format(OperationOk));
                 Observer.Observe('try.error.code', OperationCode);
             end else MRCurrentPage.Operate(Side, Op);
+            L.Phase('after-post-operation');
             Observer.Observe('after', MRCurrentPage.Snapshot(Side));
             Observer.Observe('trace', L.ReadTrace());
         end;
         Observer.Observe('capture.end', 'COMPLETE');
+    end;
+
+    local procedure MRRun(Identity: Text; RowId: Integer; Mode: Integer; Side: Integer; Op: Integer; CatchOperation: Boolean)
+    begin
+        MRRunWithoutFinish(Identity, RowId, Mode, Side, Op, CatchOperation);
         Observer.Finish();
     end;
 
@@ -1358,7 +1366,9 @@ codeunit 92648 "LT Y37 PC Tests"
     procedure MR_OK_Host_UpdateTrue_Try_Observe()
     begin
         Initialize();
-        MRRun('MR_OK_Host_UpdateTrue_Try_Observe', 14, 0, 0, 1, true);
+        asserterror MRRunWithoutFinish('MR_OK_Host_UpdateTrue_Try_Observe', 14, 0, 0, 1, true);
+        Observer.ObserveError('fatal');
+        MRFatalFinish();
     end;
 
     [Test]
@@ -1366,7 +1376,9 @@ codeunit 92648 "LT Y37 PC Tests"
     procedure MR_OK_Host_SaveRecord_Try_Observe()
     begin
         Initialize();
-        MRRun('MR_OK_Host_SaveRecord_Try_Observe', 15, 0, 0, 2, true);
+        asserterror MRRunWithoutFinish('MR_OK_Host_SaveRecord_Try_Observe', 15, 0, 0, 2, true);
+        Observer.ObserveError('fatal');
+        MRFatalFinish();
     end;
 
     [Test]
@@ -1382,7 +1394,9 @@ codeunit 92648 "LT Y37 PC Tests"
     procedure MR_OK_Part_UpdateTrue_Try_Observe()
     begin
         Initialize();
-        MRRun('MR_OK_Part_UpdateTrue_Try_Observe', 17, 0, 1, 1, true);
+        asserterror MRRunWithoutFinish('MR_OK_Part_UpdateTrue_Try_Observe', 17, 0, 1, 1, true);
+        Observer.ObserveError('fatal');
+        MRFatalFinish();
     end;
 
     [Test]
@@ -1390,7 +1404,9 @@ codeunit 92648 "LT Y37 PC Tests"
     procedure MR_OK_Part_SaveRecord_Try_Observe()
     begin
         Initialize();
-        MRRun('MR_OK_Part_SaveRecord_Try_Observe', 18, 0, 1, 2, true);
+        asserterror MRRunWithoutFinish('MR_OK_Part_SaveRecord_Try_Observe', 18, 0, 1, 2, true);
+        Observer.ObserveError('fatal');
+        MRFatalFinish();
     end;
 
     [Test]
@@ -1406,7 +1422,9 @@ codeunit 92648 "LT Y37 PC Tests"
     procedure MR_Cancel_Host_UpdateTrue_Try_Observe()
     begin
         Initialize();
-        MRRun('MR_Cancel_Host_UpdateTrue_Try_Observe', 20, 1, 0, 1, true);
+        asserterror MRRunWithoutFinish('MR_Cancel_Host_UpdateTrue_Try_Observe', 20, 1, 0, 1, true);
+        Observer.ObserveError('fatal');
+        MRFatalFinish();
     end;
 
     [Test]
@@ -1414,7 +1432,9 @@ codeunit 92648 "LT Y37 PC Tests"
     procedure MR_Cancel_Host_SaveRecord_Try_Observe()
     begin
         Initialize();
-        MRRun('MR_Cancel_Host_SaveRecord_Try_Observe', 21, 1, 0, 2, true);
+        asserterror MRRunWithoutFinish('MR_Cancel_Host_SaveRecord_Try_Observe', 21, 1, 0, 2, true);
+        Observer.ObserveError('fatal');
+        MRFatalFinish();
     end;
 
     [Test]
@@ -1430,7 +1450,9 @@ codeunit 92648 "LT Y37 PC Tests"
     procedure MR_Cancel_Part_UpdateTrue_Try_Observe()
     begin
         Initialize();
-        MRRun('MR_Cancel_Part_UpdateTrue_Try_Observe', 23, 1, 1, 1, true);
+        asserterror MRRunWithoutFinish('MR_Cancel_Part_UpdateTrue_Try_Observe', 23, 1, 1, 1, true);
+        Observer.ObserveError('fatal');
+        MRFatalFinish();
     end;
 
     [Test]
@@ -1438,7 +1460,9 @@ codeunit 92648 "LT Y37 PC Tests"
     procedure MR_Cancel_Part_SaveRecord_Try_Observe()
     begin
         Initialize();
-        MRRun('MR_Cancel_Part_SaveRecord_Try_Observe', 24, 1, 1, 2, true);
+        asserterror MRRunWithoutFinish('MR_Cancel_Part_SaveRecord_Try_Observe', 24, 1, 1, 2, true);
+        Observer.ObserveError('fatal');
+        MRFatalFinish();
     end;
 
     [Test]
@@ -1617,6 +1641,7 @@ codeunit 92648 "LT Y37 PC Tests"
     begin
         Initialize();
         MRLSeed(1014); MRLSeed(1015); Clear(MRCurrentPage); MRLSet(1014, 1);
+        MRCurrentPage.LookupMode := true;
         Observer.Observe('first.answer', Format(MRCurrentPage.RunModal())); MRLSnapshot('first');
         Observer.Observe('first.db.before', MRLDatabase(1014));
         Observer.Observe('second.db.before', MRLDatabase(1015));
@@ -1695,5 +1720,166 @@ codeunit 92648 "LT Y37 PC Tests"
     procedure MRL_RepeatOK_WithoutSetRecord_Observe_More1()
     begin
         Observer.More();
+    end;
+
+    local procedure MRFatalFinish()
+    var L: Codeunit "PAG Modal Writes Log";
+    begin
+        // These are after an outer Asserterror boundary, not an unrolled-back DB observation.
+        Observer.Observe('phase.at-fatal', L.ReadPhase());
+        Observer.Observe('trace.at-fatal', L.ReadTrace());
+        Observer.Observe('capture.end', 'COMPLETE');
+        Observer.Finish();
+    end;
+
+    local procedure MROwnHandler()
+    var L: Codeunit "PAG Modal Writes Log"; Ok: Boolean; Code: Text;
+    begin
+        L.ResetTrace(); MRCurrentPage.Dirty(L.Side());
+        L.Before(MRCurrentPage.Snapshot(L.Side()));
+        L.Phase('before-own-operation');
+        if L.Mode() = 5 then begin
+            ClearLastError(); Ok := MRTryOperate(MRCurrentPage, L.Side(), L.Operation());
+            if not Ok then Code := GetLastErrorCode();
+            L.TryResult(Format(Ok), Code);
+        end else MRCurrentPage.Operate(L.Side(), L.Operation());
+        L.Phase('after-own-operation');
+        L.Freeze(MRCurrentPage.Snapshot(L.Side()));
+    end;
+
+    local procedure MROwnRunOnly()
+    var Answer: Action; L: Codeunit "PAG Modal Writes Log";
+    begin
+        Answer := MRCurrentPage.RunModal();
+        L.Returned(Format(Answer));
+    end;
+
+    local procedure MROwnCase(Identity: Text; RowId: Integer; Side: Integer; Op: Integer; CatchOperation: Boolean)
+    var H: Record "PAG Modal Writes Host"; R: Record "PAG Modal Writes Line";
+        L: Codeunit "PAG Modal Writes Log"; Mode: Integer;
+    begin
+        Mode := 4; if CatchOperation then Mode := 5;
+        Clear(MRCurrentPage); L.Configure(Mode, Side, Op, RowId);
+        H.Id := RowId; H.Value := 'host-seed'; H.Insert(false);
+        R.Id := RowId; R.Value := 'part-seed'; R.Insert(false);
+        MRCurrentPage.SetRecord(H); MRCurrentPage.LookupMode := true;
+        if CatchOperation and (Op <> 0) then begin
+            // A normal return is a diagnostic Asserterror failure, never a confirmed fatal.
+            // MROwnRunOnly has no Finish or artificial error that could be misidentified.
+            asserterror MROwnRunOnly();
+            Observer.ObserveError('fatal');
+            Observer.Observe('case', Identity);
+            MRFatalFinish();
+            exit;
+        end;
+        MROwnRunOnly();
+        Observer.Observe('case', Identity);
+        Observer.Observe('returned', L.ReturnedText());
+        Observer.Observe('before', L.BeforeText());
+        Observer.Observe('after', L.AfterText());
+        Observer.Observe('phase', L.ReadPhase());
+        Observer.Observe('trace', L.OperationTrace());
+        if CatchOperation then begin
+            Observer.Observe('try.ok', L.TryOkText());
+            Observer.Observe('try.error.code', L.TryCodeText());
+        end;
+        Observer.Observe('capture.end', 'COMPLETE');
+        Observer.Finish();
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRO_OpenOwn_Host_UpdateFalse_Direct_Observe()
+    begin
+        Initialize();
+        MROwnCase('MRO_OpenOwn_Host_UpdateFalse_Direct_Observe', 2010, 0, 0, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRO_OpenOwn_Host_UpdateFalse_Try_Observe()
+    begin
+        Initialize();
+        MROwnCase('MRO_OpenOwn_Host_UpdateFalse_Try_Observe', 2011, 0, 0, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRO_OpenOwn_Host_UpdateTrue_Direct_Observe()
+    begin
+        Initialize();
+        MROwnCase('MRO_OpenOwn_Host_UpdateTrue_Direct_Observe', 2012, 0, 1, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRO_OpenOwn_Host_UpdateTrue_Try_Observe()
+    begin
+        Initialize();
+        MROwnCase('MRO_OpenOwn_Host_UpdateTrue_Try_Observe', 2013, 0, 1, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRO_OpenOwn_Host_SaveRecord_Direct_Observe()
+    begin
+        Initialize();
+        MROwnCase('MRO_OpenOwn_Host_SaveRecord_Direct_Observe', 2014, 0, 2, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRO_OpenOwn_Host_SaveRecord_Try_Observe()
+    begin
+        Initialize();
+        MROwnCase('MRO_OpenOwn_Host_SaveRecord_Try_Observe', 2015, 0, 2, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRO_OpenOwn_Part_UpdateFalse_Direct_Observe()
+    begin
+        Initialize();
+        MROwnCase('MRO_OpenOwn_Part_UpdateFalse_Direct_Observe', 2016, 1, 0, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRO_OpenOwn_Part_UpdateFalse_Try_Observe()
+    begin
+        Initialize();
+        MROwnCase('MRO_OpenOwn_Part_UpdateFalse_Try_Observe', 2017, 1, 0, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRO_OpenOwn_Part_UpdateTrue_Direct_Observe()
+    begin
+        Initialize();
+        MROwnCase('MRO_OpenOwn_Part_UpdateTrue_Direct_Observe', 2018, 1, 1, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRO_OpenOwn_Part_UpdateTrue_Try_Observe()
+    begin
+        Initialize();
+        MROwnCase('MRO_OpenOwn_Part_UpdateTrue_Try_Observe', 2019, 1, 1, true);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRO_OpenOwn_Part_SaveRecord_Direct_Observe()
+    begin
+        Initialize();
+        MROwnCase('MRO_OpenOwn_Part_SaveRecord_Direct_Observe', 2020, 1, 2, false);
+    end;
+
+    [Test]
+    [HandlerFunctions('MRDialogHandler')]
+    procedure MRO_OpenOwn_Part_SaveRecord_Try_Observe()
+    begin
+        Initialize();
+        MROwnCase('MRO_OpenOwn_Part_SaveRecord_Try_Observe', 2021, 1, 2, true);
     end;
 }
