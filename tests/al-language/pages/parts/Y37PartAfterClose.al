@@ -2521,4 +2521,231 @@ codeunit 92648 "LT Y37 PC Tests"
             else Error('Unknown modal return contract: %1', Identity);
         end;
     end;
+
+    var MRHPage: Page "PAG Hidden Return Host"; MRHOpenedA: Text; MRHOpenedAId: Integer;
+        MRHVisibleBId: Integer; MRHAVisible: Boolean; MRHBVisible: Boolean; MRHBeforeClose: Text;
+
+    [ModalPageHandler]
+    procedure MRHHandler(var P: TestPage "PAG Hidden Return Host")
+    var L: Codeunit "PAG Modal Writes Log";
+    begin
+        MRHOpenedAId := P.A.Id.AsInteger();
+        MRHOpenedA := MRHPage.HiddenSnapshot();
+        P.ShowB.SetValue(true);
+        MRHAVisible := P.A.Visible(); MRHBVisible := P.B.Visible();
+        MRHVisibleBId := P.B.Id.AsInteger();
+        MRHBeforeClose := L.ReadTrace();
+        P.OK().Invoke();
+    end;
+
+    local procedure MRHCase(Identity: Text; RowId: Integer; Op: Integer)
+    var H: Record "PAG Modal Writes Host"; R: Record "PAG Modal Writes Line";
+        L: Codeunit "PAG Modal Writes Log"; Answer: Action;
+    begin
+        Clear(MRHPage); L.Configure(0, 1, Op, RowId);
+        MRHOpenedA := ''; MRHOpenedAId := -1; MRHVisibleBId := -1;
+        MRHAVisible := true; MRHBVisible := false; MRHBeforeClose := '';
+        H.Id := RowId; H.Value := 'host-seed'; H.Insert(false);
+        R.Id := RowId; R.Value := 'part-seed'; R.Insert(false);
+        MRHPage.SetRecord(H); MRHPage.LookupMode := true; Answer := MRHPage.RunModal();
+        Observer.Observe('case', Identity); Observer.Observe('returned', Format(Answer));
+        Observer.Observe('opened.a.id', Format(MRHOpenedAId));
+        Observer.Observe('opened.a.snapshot', MRHOpenedA);
+        Observer.Observe('a.visible.after.switch', Format(MRHAVisible));
+        Observer.Observe('b.visible.after.switch', Format(MRHBVisible));
+        Observer.Observe('visible.b.id', Format(MRHVisibleBId));
+        Observer.Observe('before.close.trace', MRHBeforeClose);
+        Observer.Observe('after.close.trace', L.ReadTrace());
+        L.ResetTrace(); Observer.Observe('before.dirty.trace', L.ReadTrace());
+        MRHPage.DirtyHidden();
+        Observer.Observe('before.hidden', MRHPage.HiddenSnapshot());
+        Observer.Observe('before.visible', MRHPage.VisibleSnapshot());
+        MRHPage.OperateHidden(Op);
+        Observer.Observe('operation.trace', L.ReadTrace());
+        Observer.Observe('after.hidden', MRHPage.HiddenSnapshot());
+        Observer.Observe('after.visible', MRHPage.VisibleSnapshot());
+        Observer.Observe('after.read.trace', L.ReadTrace());
+        H.Get(RowId); Observer.Observe('db.host', H.Value);
+        Observer.Observe('capture.end', 'COMPLETE'); Observer.Finish();
+    end;
+
+    [Test]
+    [HandlerFunctions('MRHHandler')]
+    procedure MRH_AfterModal_Hidden_UpdateFalse_Observe()
+    begin
+        Initialize();
+        MRHCase('MRH_AfterModal_Hidden_UpdateFalse_Observe', 4010, 0);
+    end;
+
+    // Transport-only continuation preserves the complete preceding observation.
+    [Test]
+    procedure MRH_AfterModal_Hidden_UpdateFalse_Observe_More1()
+    begin Observer.More(); end;
+
+    [Test]
+    [HandlerFunctions('MRHHandler')]
+    procedure MRH_AfterModal_Hidden_UpdateTrue_Observe()
+    begin
+        Initialize();
+        MRHCase('MRH_AfterModal_Hidden_UpdateTrue_Observe', 4011, 1);
+    end;
+
+    // Transport-only continuation preserves the complete preceding observation.
+    [Test]
+    procedure MRH_AfterModal_Hidden_UpdateTrue_Observe_More1()
+    begin Observer.More(); end;
+
+    [Test]
+    [HandlerFunctions('MRHHandler')]
+    procedure MRH_AfterModal_Hidden_SaveRecord_Observe()
+    begin
+        Initialize();
+        MRHCase('MRH_AfterModal_Hidden_SaveRecord_Observe', 4012, 2);
+    end;
+
+    // Transport-only continuation preserves the complete preceding observation.
+    [Test]
+    procedure MRH_AfterModal_Hidden_SaveRecord_Observe_More1()
+    begin Observer.More(); end;
+    var RRPage: Page "PAG Modal Root Abort"; RRMode: Integer; RRAnswer: Action;
+        RRInitialId: Integer; RRNextId: Integer; RRNextResult: Boolean; RRNextReturned: Boolean;
+        RRHandlerRoot: Text; RRHandlerTrace: Text; RRBeforeReturnPhase: Text; RRBeforeReturnTrace: Text;
+        RRInnerOk: Boolean; RRInnerCode: Text; RRInnerText: Text;
+
+    [ModalPageHandler]
+    procedure RRHandler(var P: TestPage "PAG Modal Root Abort")
+    var L: Codeunit "PAG Modal Writes Log";
+    begin
+        RRInitialId := P.Id.AsInteger();
+        RRHandlerRoot := RRPage.ReadRoot(); RRHandlerTrace := L.ReadTrace();
+        if (RRMode in [2, 3]) and (RRInitialId <> L.RowId()) then
+            Error('RR precondition: expected initial row %1, got %2', L.RowId(), RRInitialId);
+        case RRMode of
+            0: P.OK().Invoke();
+            1: begin L.Mark('RR.HANDLER.ERROR'); Error('direct root handler failure'); end;
+            2: begin
+                L.Phase('row-error-armed'); L.Mark('RR.NEXT.ENTER');
+                RRNextResult := P.Next(); RRNextReturned := true; RRNextId := P.Id.AsInteger(); L.Mark('RR.NEXT.RETURN');
+            end;
+            3: begin
+                L.Phase('row-error-armed'); L.Mark('RR.TRY.NEXT.ENTER');
+                ClearLastError(); RRInnerOk := RRTryNext(P);
+                if not RRInnerOk then begin RRInnerCode := GetLastErrorCode(); RRInnerText := GetLastErrorText(); end;
+                L.Phase('row-error-caught'); L.Mark('RR.TRY.NEXT.RETURN');
+            end;
+        end;
+        L.Mark('RR.HANDLER.RETURN'); RRBeforeReturnPhase := L.ReadPhase(); RRBeforeReturnTrace := L.ReadTrace();
+    end;
+
+    [TryFunction]
+    local procedure RRTryNext(var P: TestPage "PAG Modal Root Abort")
+    begin RRNextResult := P.Next(); RRNextReturned := true; RRNextId := P.Id.AsInteger(); end;
+    [TryFunction]
+    local procedure RRTryRun()
+    begin RRAnswer := RRPage.RunModal(); end;
+    [TryFunction]
+    local procedure RRTryGet(Root: Boolean; var Value: Text)
+    begin if Root then Value := RRPage.ReadRoot() else Value := RRPage.ReadChild(); end;
+
+    local procedure RRGet(LabelText: Text; Root: Boolean)
+    var Value: Text; Ok: Boolean; Code: Text; ErrorText: Text; L: Codeunit "PAG Modal Writes Log";
+    begin
+        Observer.Observe(LabelText + '.trace.before', L.ReadTrace());
+        ClearLastError(); Ok := RRTryGet(Root, Value);
+        if not Ok then begin Code := GetLastErrorCode(); ErrorText := GetLastErrorText(); end;
+        Observer.Observe(LabelText + '.ok', Format(Ok));
+        Observer.Observe(LabelText + '.error.code', Code); Observer.Observe(LabelText + '.error.text', ErrorText);
+        Observer.Observe(LabelText + '.value', Value); Observer.Observe(LabelText + '.trace.after', L.ReadTrace());
+    end;
+
+    local procedure RRCase(Identity: Text; RowId: Integer; Mode: Integer)
+    var H: Record "PAG Modal Writes Host"; R: Record "PAG Modal Writes Line"; L: Codeunit "PAG Modal Writes Log";
+        RunOk: Boolean; Code: Text; ErrorText: Text;
+    begin
+        Clear(RRPage); RRMode := Mode; Clear(RRAnswer); RRInitialId := -1; RRNextId := -1;
+        RRNextResult := false; RRNextReturned := false; RRHandlerRoot := ''; RRHandlerTrace := ''; RRBeforeReturnPhase := ''; RRBeforeReturnTrace := '';
+        RRInnerOk := false; RRInnerCode := ''; RRInnerText := ''; L.Configure(0, 1, 0, RowId);
+        H.Id := RowId; H.Value := 'host-first'; H.Insert(false);
+        H.Id := RowId + 1; H.Value := 'host-second'; H.Insert(false);
+        R.Id := RowId; R.Value := 'part-first'; R.Insert(false);
+        R.Id := RowId + 1; R.Value := 'part-second'; R.Insert(false);
+        H.Get(RowId); RRPage.SetRecord(H); RRPage.Prepare(); RRPage.LookupMode := true;
+        Observer.Observe('prepared.root', RRPage.ReadRoot());
+        ClearLastError(); RunOk := RRTryRun();
+        if not RunOk then begin Code := GetLastErrorCode(); ErrorText := GetLastErrorText(); end;
+        Observer.Observe('run.ok', Format(RunOk)); Observer.Observe('run.error.code', Code); Observer.Observe('run.error.text', ErrorText);
+        if RunOk then Observer.Observe('run.answer', Format(RRAnswer));
+        Observer.Observe('trace.after.run', L.ReadTrace());
+        // Root is frozen BEFORE part access can cause any lazy initialization.
+        RRGet('root', true); RRGet('part.first', false); RRGet('part.second', false);
+        Observer.Observe('handler.initial.id', Format(RRInitialId)); Observer.Observe('handler.root', RRHandlerRoot);
+        Observer.Observe('handler.trace', RRHandlerTrace); Observer.Observe('next.target.id', Format(RowId + 1));
+        Observer.Observe('next.returned', Format(RRNextReturned));
+        if RRNextReturned then Observer.Observe('next.return.value', Format(RRNextResult)); Observer.Observe('next.reached.id', Format(RRNextId));
+        Observer.Observe('inner.ok', Format(RRInnerOk)); Observer.Observe('inner.error.code', RRInnerCode); Observer.Observe('inner.error.text', RRInnerText);
+        Observer.Observe('handler.before.return.phase', RRBeforeReturnPhase); Observer.Observe('handler.before.return.trace', RRBeforeReturnTrace);
+        H.Get(RowId); Observer.Observe('db.host.first', H.Value); H.Get(RowId + 1); Observer.Observe('db.host.second', H.Value);
+        R.Get(RowId); Observer.Observe('db.part.first', R.Value); R.Get(RowId + 1); Observer.Observe('db.part.second', R.Value);
+        Observer.Observe('case', Identity); Observer.Observe('capture.end', 'COMPLETE'); Observer.Finish();
+    end;
+
+    [Test]
+    [HandlerFunctions('RRHandler')]
+    procedure RR_NormalOK_Observe()
+    begin Initialize(); RRCase('RR_NormalOK_Observe', 5010, 0); end;
+
+    // Transport-only continuation; no additional semantic case.
+    [Test]
+    procedure RR_NormalOK_Observe_More1()
+    begin Observer.More(); end;
+
+    // Transport-only continuation; no additional semantic case.
+    [Test]
+    procedure RR_NormalOK_Observe_More2()
+    begin Observer.More(); end;
+
+    [Test]
+    [HandlerFunctions('RRHandler')]
+    procedure RR_HandlerDialog_Observe()
+    begin Initialize(); RRCase('RR_HandlerDialog_Observe', 5020, 1); end;
+
+    // Transport-only continuation; no additional semantic case.
+    [Test]
+    procedure RR_HandlerDialog_Observe_More1()
+    begin Observer.More(); end;
+
+    // Transport-only continuation; no additional semantic case.
+    [Test]
+    procedure RR_HandlerDialog_Observe_More2()
+    begin Observer.More(); end;
+
+    [Test]
+    [HandlerFunctions('RRHandler')]
+    procedure RR_RowInvokeDirect_Observe()
+    begin Initialize(); RRCase('RR_RowInvokeDirect_Observe', 5030, 2); end;
+
+    // Transport-only continuation; no additional semantic case.
+    [Test]
+    procedure RR_RowInvokeDirect_Observe_More1()
+    begin Observer.More(); end;
+
+    // Transport-only continuation; no additional semantic case.
+    [Test]
+    procedure RR_RowInvokeDirect_Observe_More2()
+    begin Observer.More(); end;
+
+    [Test]
+    [HandlerFunctions('RRHandler')]
+    procedure RR_RowInvokeTryCaught_Observe()
+    begin Initialize(); RRCase('RR_RowInvokeTryCaught_Observe', 5040, 3); end;
+
+    // Transport-only continuation; no additional semantic case.
+    [Test]
+    procedure RR_RowInvokeTryCaught_Observe_More1()
+    begin Observer.More(); end;
+
+    // Transport-only continuation; no additional semantic case.
+    [Test]
+    procedure RR_RowInvokeTryCaught_Observe_More2()
+    begin Observer.More(); end;
 }
