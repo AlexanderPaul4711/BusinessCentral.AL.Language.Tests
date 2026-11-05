@@ -1,5 +1,5 @@
 // BC Documentation: https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/methods-auto/page/page-update-method
-// Scope: observe-only bootstrap, not a qualified contract until exact native facts are asserted.
+// Scope: in-scope (Cloud-compatible); exact native facts are asserted by the caller.
 // Fixtures used: Probe Observer; local objects below whose page/table trigger definitions are under test.
 // BC versions: 27.5/28.5/29.0. Existing Y37 cases remain unchanged.
 // local object: distinguish retained page Rec, database writes and page/table trigger execution after modal return.

@@ -1,5 +1,5 @@
 // BC Documentation: https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/triggers-auto/page/devenv-oninit-page-trigger
-// Scope: observe-only bootstrap. Logical state/trigger sequence, not allocation identity.
+// Scope: in-scope (Cloud-compatible). Logical state/trigger sequence, not allocation identity.
 // Fixtures used: Probe Observer, PAG Modal Writes Host/Line/Log.
 // local object: its OnInit/OnOpen/global state distinguishes default part access after a handler error.
 page 92666 "PAG Failed Part Child"

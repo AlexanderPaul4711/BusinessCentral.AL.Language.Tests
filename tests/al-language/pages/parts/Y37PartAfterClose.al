@@ -1254,7 +1254,8 @@ codeunit 92648 "LT Y37 PC Tests"
     local procedure MRRun(Identity: Text; RowId: Integer; Mode: Integer; Side: Integer; Op: Integer; CatchOperation: Boolean)
     begin
         MRRunWithoutFinish(Identity, RowId, Mode, Side, Op, CatchOperation);
-        Observer.Finish();
+        MRExpect(Identity);
+        Observer.Verify();
     end;
 
     [Test]
@@ -1368,7 +1369,7 @@ codeunit 92648 "LT Y37 PC Tests"
         Initialize();
         asserterror MRRunWithoutFinish('MR_OK_Host_UpdateTrue_Try_Observe', 14, 0, 0, 1, true);
         Observer.ObserveError('fatal');
-        MRFatalFinish();
+        MRFatalFinish('MR_OK_Host_UpdateTrue_Try_Observe');
     end;
 
     [Test]
@@ -1378,7 +1379,7 @@ codeunit 92648 "LT Y37 PC Tests"
         Initialize();
         asserterror MRRunWithoutFinish('MR_OK_Host_SaveRecord_Try_Observe', 15, 0, 0, 2, true);
         Observer.ObserveError('fatal');
-        MRFatalFinish();
+        MRFatalFinish('MR_OK_Host_SaveRecord_Try_Observe');
     end;
 
     [Test]
@@ -1396,7 +1397,7 @@ codeunit 92648 "LT Y37 PC Tests"
         Initialize();
         asserterror MRRunWithoutFinish('MR_OK_Part_UpdateTrue_Try_Observe', 17, 0, 1, 1, true);
         Observer.ObserveError('fatal');
-        MRFatalFinish();
+        MRFatalFinish('MR_OK_Part_UpdateTrue_Try_Observe');
     end;
 
     [Test]
@@ -1406,7 +1407,7 @@ codeunit 92648 "LT Y37 PC Tests"
         Initialize();
         asserterror MRRunWithoutFinish('MR_OK_Part_SaveRecord_Try_Observe', 18, 0, 1, 2, true);
         Observer.ObserveError('fatal');
-        MRFatalFinish();
+        MRFatalFinish('MR_OK_Part_SaveRecord_Try_Observe');
     end;
 
     [Test]
@@ -1424,7 +1425,7 @@ codeunit 92648 "LT Y37 PC Tests"
         Initialize();
         asserterror MRRunWithoutFinish('MR_Cancel_Host_UpdateTrue_Try_Observe', 20, 1, 0, 1, true);
         Observer.ObserveError('fatal');
-        MRFatalFinish();
+        MRFatalFinish('MR_Cancel_Host_UpdateTrue_Try_Observe');
     end;
 
     [Test]
@@ -1434,7 +1435,7 @@ codeunit 92648 "LT Y37 PC Tests"
         Initialize();
         asserterror MRRunWithoutFinish('MR_Cancel_Host_SaveRecord_Try_Observe', 21, 1, 0, 2, true);
         Observer.ObserveError('fatal');
-        MRFatalFinish();
+        MRFatalFinish('MR_Cancel_Host_SaveRecord_Try_Observe');
     end;
 
     [Test]
@@ -1452,7 +1453,7 @@ codeunit 92648 "LT Y37 PC Tests"
         Initialize();
         asserterror MRRunWithoutFinish('MR_Cancel_Part_UpdateTrue_Try_Observe', 23, 1, 1, 1, true);
         Observer.ObserveError('fatal');
-        MRFatalFinish();
+        MRFatalFinish('MR_Cancel_Part_UpdateTrue_Try_Observe');
     end;
 
     [Test]
@@ -1462,7 +1463,7 @@ codeunit 92648 "LT Y37 PC Tests"
         Initialize();
         asserterror MRRunWithoutFinish('MR_Cancel_Part_SaveRecord_Try_Observe', 24, 1, 1, 2, true);
         Observer.ObserveError('fatal');
-        MRFatalFinish();
+        MRFatalFinish('MR_Cancel_Part_SaveRecord_Try_Observe');
     end;
 
     [Test]
@@ -1569,7 +1570,8 @@ codeunit 92648 "LT Y37 PC Tests"
     begin
         Observer.Observe('case', Identity);
         Observer.Observe('capture.end', 'COMPLETE');
-        Observer.Finish();
+        MRExpect(Identity);
+        Observer.Verify();
     end;
 
     [Test]
@@ -1583,12 +1585,6 @@ codeunit 92648 "LT Y37 PC Tests"
         MRLFinish('MRL_NeverRun_SetRecord_PartAccess_Observe');
     end;
 
-    // Transport-only continuation: never reset the preceding Observer buffer here.
-    [Test]
-    procedure MRL_NeverRun_SetRecord_PartAccess_Observe_More1()
-    begin
-        Observer.More();
-    end;
 
     [Test]
     [HandlerFunctions('MRDialogHandler')]
@@ -1604,12 +1600,6 @@ codeunit 92648 "LT Y37 PC Tests"
         MRLFinish('MRL_Clear_AfterModal_PartAccess_Observe');
     end;
 
-    // Transport-only continuation: never reset the preceding Observer buffer here.
-    [Test]
-    procedure MRL_Clear_AfterModal_PartAccess_Observe_More1()
-    begin
-        Observer.More();
-    end;
 
     [Test]
     [HandlerFunctions('MRDialogHandler')]
@@ -1628,12 +1618,6 @@ codeunit 92648 "LT Y37 PC Tests"
         MRLFinish('MRL_RepeatOK_SetDifferentRecord_Observe');
     end;
 
-    // Transport-only continuation: never reset the preceding Observer buffer here.
-    [Test]
-    procedure MRL_RepeatOK_SetDifferentRecord_Observe_More1()
-    begin
-        Observer.More();
-    end;
 
     [Test]
     [HandlerFunctions('MRDialogHandler')]
@@ -1652,12 +1636,6 @@ codeunit 92648 "LT Y37 PC Tests"
         MRLFinish('MRL_RepeatCancel_SetDifferentRecord_Observe');
     end;
 
-    // Transport-only continuation: never reset the preceding Observer buffer here.
-    [Test]
-    procedure MRL_RepeatCancel_SetDifferentRecord_Observe_More1()
-    begin
-        Observer.More();
-    end;
 
     [Test]
     [HandlerFunctions('MRDialogHandler')]
@@ -1671,12 +1649,6 @@ codeunit 92648 "LT Y37 PC Tests"
         MRLFinish('MRL_FirstRunHandlerError_TryPartAccess_Observe');
     end;
 
-    // Transport-only continuation: never reset the preceding Observer buffer here.
-    [Test]
-    procedure MRL_FirstRunHandlerError_TryPartAccess_Observe_More1()
-    begin
-        Observer.More();
-    end;
 
     [Test]
     [HandlerFunctions('MRDialogHandler')]
@@ -1694,12 +1666,6 @@ codeunit 92648 "LT Y37 PC Tests"
         MRLFinish('MRL_SecondRunHandlerError_TryPartAccess_Observe');
     end;
 
-    // Transport-only continuation: never reset the preceding Observer buffer here.
-    [Test]
-    procedure MRL_SecondRunHandlerError_TryPartAccess_Observe_More1()
-    begin
-        Observer.More();
-    end;
 
     [Test]
     [HandlerFunctions('MRDialogHandler')]
@@ -1715,21 +1681,16 @@ codeunit 92648 "LT Y37 PC Tests"
         MRLFinish('MRL_RepeatOK_WithoutSetRecord_Observe');
     end;
 
-    // Transport-only continuation: never reset the preceding Observer buffer here.
-    [Test]
-    procedure MRL_RepeatOK_WithoutSetRecord_Observe_More1()
-    begin
-        Observer.More();
-    end;
 
-    local procedure MRFatalFinish()
+    local procedure MRFatalFinish(Identity: Text)
     var L: Codeunit "PAG Modal Writes Log";
     begin
         // These are after an outer Asserterror boundary, not an unrolled-back DB observation.
         Observer.Observe('phase.at-fatal', L.ReadPhase());
         Observer.Observe('trace.at-fatal', L.ReadTrace());
         Observer.Observe('capture.end', 'COMPLETE');
-        Observer.Finish();
+        MRExpect(Identity);
+        Observer.Verify();
     end;
 
     local procedure MROwnHandler()
@@ -1769,7 +1730,7 @@ codeunit 92648 "LT Y37 PC Tests"
             asserterror MROwnRunOnly();
             Observer.ObserveError('fatal');
             Observer.Observe('case', Identity);
-            MRFatalFinish();
+            MRFatalFinish(Identity);
             exit;
         end;
         MROwnRunOnly();
@@ -1784,7 +1745,8 @@ codeunit 92648 "LT Y37 PC Tests"
             Observer.Observe('try.error.code', L.TryCodeText());
         end;
         Observer.Observe('capture.end', 'COMPLETE');
-        Observer.Finish();
+        MRExpect(Identity);
+        Observer.Verify();
     end;
 
     [Test]
@@ -1932,7 +1894,8 @@ codeunit 92648 "LT Y37 PC Tests"
         H.Get(RowId); Observer.Observe('db.host', H.Value);
         Observer.Observe('case', Identity);
         Observer.Observe('capture.end', 'COMPLETE');
-        Observer.Finish();
+        MRExpect(Identity);
+        Observer.Verify();
     end;
 
     [Test]
@@ -1942,10 +1905,6 @@ codeunit 92648 "LT Y37 PC Tests"
         MRFCase('MRF_NeverRun_DefaultPartInit_Observe', 3010, false);
     end;
 
-    // Transport-only continuation preserves the preceding buffer.
-    [Test]
-    procedure MRF_NeverRun_DefaultPartInit_Observe_More1()
-    begin Observer.More(); end;
 
     [Test]
     [HandlerFunctions('MRFPartHandler')]
@@ -1955,8 +1914,611 @@ codeunit 92648 "LT Y37 PC Tests"
         MRFCase('MRF_HandlerError_DefaultPartInit_Observe', 3011, true);
     end;
 
-    // Transport-only continuation preserves the preceding buffer.
-    [Test]
-    procedure MRF_HandlerError_DefaultPartInit_Observe_More1()
-    begin Observer.More(); end;
+
+    // Every literal below is derived from all three source-bound native pair streams.
+    // This candidate is qualified only after full green runs of this exact source.
+    local procedure MRExpect(Identity: Text)
+    begin
+        case Identity of
+            'MR_OK_Host_UpdateFalse_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_OK_Host_UpdateFalse_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '1:host-dirty/db@1:host-seed');
+                    Observer.Expect('after', '1:host-dirty/db@1:host-seed');
+                    Observer.Expect('trace', 'H.DIRTY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_OK_Host_UpdateTrue_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_OK_Host_UpdateTrue_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '2:host-dirty/db@2:host-seed');
+                    Observer.Expect('after', '2:host-dirty/db@2:host-dirty');
+                    Observer.Expect('trace', 'H.DIRTY;H.PAGE.MODIFY;H.TABLE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_OK_Host_SaveRecord_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_OK_Host_SaveRecord_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '3:host-dirty/db@3:host-seed');
+                    Observer.Expect('after', '3:host-dirty/db@3:host-dirty');
+                    Observer.Expect('trace', 'H.DIRTY;H.PAGE.MODIFY;H.TABLE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_OK_Part_UpdateFalse_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_OK_Part_UpdateFalse_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '4:part-dirty/db@4:part-seed');
+                    Observer.Expect('after', '4:part-dirty/db@4:part-seed');
+                    Observer.Expect('trace', 'P.DIRTY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_OK_Part_UpdateTrue_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_OK_Part_UpdateTrue_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '5:part-dirty/db@5:part-seed');
+                    Observer.Expect('after', '5:part-dirty/db@5:part-dirty');
+                    Observer.Expect('trace', 'P.DIRTY;P.PAGE.MODIFY;P.TABLE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_OK_Part_SaveRecord_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_OK_Part_SaveRecord_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '6:part-dirty/db@6:part-seed');
+                    Observer.Expect('after', '6:part-dirty/db@6:part-dirty');
+                    Observer.Expect('trace', 'P.DIRTY;P.PAGE.MODIFY;P.TABLE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Cancel_Host_UpdateFalse_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Cancel_Host_UpdateFalse_Direct_Observe');
+                    Observer.Expect('returned', 'LookupCancel');
+                    Observer.Expect('before', '7:host-dirty/db@7:host-seed');
+                    Observer.Expect('after', '7:host-dirty/db@7:host-seed');
+                    Observer.Expect('trace', 'H.DIRTY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Cancel_Host_UpdateTrue_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Cancel_Host_UpdateTrue_Direct_Observe');
+                    Observer.Expect('returned', 'LookupCancel');
+                    Observer.Expect('before', '8:host-dirty/db@8:host-seed');
+                    Observer.Expect('after', '8:host-dirty/db@8:host-dirty');
+                    Observer.Expect('trace', 'H.DIRTY;H.PAGE.MODIFY;H.TABLE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Cancel_Host_SaveRecord_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Cancel_Host_SaveRecord_Direct_Observe');
+                    Observer.Expect('returned', 'LookupCancel');
+                    Observer.Expect('before', '9:host-dirty/db@9:host-seed');
+                    Observer.Expect('after', '9:host-dirty/db@9:host-dirty');
+                    Observer.Expect('trace', 'H.DIRTY;H.PAGE.MODIFY;H.TABLE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Cancel_Part_UpdateFalse_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Cancel_Part_UpdateFalse_Direct_Observe');
+                    Observer.Expect('returned', 'LookupCancel');
+                    Observer.Expect('before', '10:part-dirty/db@10:part-seed');
+                    Observer.Expect('after', '10:part-dirty/db@10:part-seed');
+                    Observer.Expect('trace', 'P.DIRTY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Cancel_Part_UpdateTrue_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Cancel_Part_UpdateTrue_Direct_Observe');
+                    Observer.Expect('returned', 'LookupCancel');
+                    Observer.Expect('before', '11:part-dirty/db@11:part-seed');
+                    Observer.Expect('after', '11:part-dirty/db@11:part-dirty');
+                    Observer.Expect('trace', 'P.DIRTY;P.PAGE.MODIFY;P.TABLE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Cancel_Part_SaveRecord_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Cancel_Part_SaveRecord_Direct_Observe');
+                    Observer.Expect('returned', 'LookupCancel');
+                    Observer.Expect('before', '12:part-dirty/db@12:part-seed');
+                    Observer.Expect('after', '12:part-dirty/db@12:part-dirty');
+                    Observer.Expect('trace', 'P.DIRTY;P.PAGE.MODIFY;P.TABLE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_OK_Host_UpdateFalse_Try_Observe':
+                begin
+                    Observer.Expect('case', 'MR_OK_Host_UpdateFalse_Try_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '13:host-dirty/db@13:host-seed');
+                    Observer.Expect('try.ok', 'Yes');
+                    Observer.Expect('try.error.code', '');
+                    Observer.Expect('after', '13:host-dirty/db@13:host-seed');
+                    Observer.Expect('trace', 'H.DIRTY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_OK_Host_UpdateTrue_Try_Observe':
+                begin
+                    Observer.Expect('case', 'MR_OK_Host_UpdateTrue_Try_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '14:host-dirty/db@14:host-seed');
+                    Observer.Expect('fatal|text', 'Call to the function ''MODIFY'' is not allowed inside the call to ''MR_OK_Host_UpdateTrue_Try_Observe'' when it is used as a TryFunction.');
+                    Observer.Expect('fatal|code', 'TryFunctionWrite');
+                    Observer.Expect('phase.at-fatal', 'before-post-operation');
+                    Observer.Expect('trace.at-fatal', 'H.DIRTY;H.PAGE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_OK_Host_SaveRecord_Try_Observe':
+                begin
+                    Observer.Expect('case', 'MR_OK_Host_SaveRecord_Try_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '15:host-dirty/db@15:host-seed');
+                    Observer.Expect('fatal|text', 'Call to the function ''MODIFY'' is not allowed inside the call to ''MR_OK_Host_SaveRecord_Try_Observe'' when it is used as a TryFunction.');
+                    Observer.Expect('fatal|code', 'TryFunctionWrite');
+                    Observer.Expect('phase.at-fatal', 'before-post-operation');
+                    Observer.Expect('trace.at-fatal', 'H.DIRTY;H.PAGE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_OK_Part_UpdateFalse_Try_Observe':
+                begin
+                    Observer.Expect('case', 'MR_OK_Part_UpdateFalse_Try_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '16:part-dirty/db@16:part-seed');
+                    Observer.Expect('try.ok', 'Yes');
+                    Observer.Expect('try.error.code', '');
+                    Observer.Expect('after', '16:part-dirty/db@16:part-seed');
+                    Observer.Expect('trace', 'P.DIRTY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_OK_Part_UpdateTrue_Try_Observe':
+                begin
+                    Observer.Expect('case', 'MR_OK_Part_UpdateTrue_Try_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '17:part-dirty/db@17:part-seed');
+                    Observer.Expect('fatal|text', 'Call to the function ''MODIFY'' is not allowed inside the call to ''MR_OK_Part_UpdateTrue_Try_Observe'' when it is used as a TryFunction.');
+                    Observer.Expect('fatal|code', 'TryFunctionWrite');
+                    Observer.Expect('phase.at-fatal', 'before-post-operation');
+                    Observer.Expect('trace.at-fatal', 'P.DIRTY;P.PAGE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_OK_Part_SaveRecord_Try_Observe':
+                begin
+                    Observer.Expect('case', 'MR_OK_Part_SaveRecord_Try_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '18:part-dirty/db@18:part-seed');
+                    Observer.Expect('fatal|text', 'Call to the function ''MODIFY'' is not allowed inside the call to ''MR_OK_Part_SaveRecord_Try_Observe'' when it is used as a TryFunction.');
+                    Observer.Expect('fatal|code', 'TryFunctionWrite');
+                    Observer.Expect('phase.at-fatal', 'before-post-operation');
+                    Observer.Expect('trace.at-fatal', 'P.DIRTY;P.PAGE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Cancel_Host_UpdateFalse_Try_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Cancel_Host_UpdateFalse_Try_Observe');
+                    Observer.Expect('returned', 'LookupCancel');
+                    Observer.Expect('before', '19:host-dirty/db@19:host-seed');
+                    Observer.Expect('try.ok', 'Yes');
+                    Observer.Expect('try.error.code', '');
+                    Observer.Expect('after', '19:host-dirty/db@19:host-seed');
+                    Observer.Expect('trace', 'H.DIRTY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Cancel_Host_UpdateTrue_Try_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Cancel_Host_UpdateTrue_Try_Observe');
+                    Observer.Expect('returned', 'LookupCancel');
+                    Observer.Expect('before', '20:host-dirty/db@20:host-seed');
+                    Observer.Expect('fatal|text', 'Call to the function ''MODIFY'' is not allowed inside the call to ''MR_Cancel_Host_UpdateTrue_Try_Observe'' when it is used as a TryFunction.');
+                    Observer.Expect('fatal|code', 'TryFunctionWrite');
+                    Observer.Expect('phase.at-fatal', 'before-post-operation');
+                    Observer.Expect('trace.at-fatal', 'H.DIRTY;H.PAGE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Cancel_Host_SaveRecord_Try_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Cancel_Host_SaveRecord_Try_Observe');
+                    Observer.Expect('returned', 'LookupCancel');
+                    Observer.Expect('before', '21:host-dirty/db@21:host-seed');
+                    Observer.Expect('fatal|text', 'Call to the function ''MODIFY'' is not allowed inside the call to ''MR_Cancel_Host_SaveRecord_Try_Observe'' when it is used as a TryFunction.');
+                    Observer.Expect('fatal|code', 'TryFunctionWrite');
+                    Observer.Expect('phase.at-fatal', 'before-post-operation');
+                    Observer.Expect('trace.at-fatal', 'H.DIRTY;H.PAGE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Cancel_Part_UpdateFalse_Try_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Cancel_Part_UpdateFalse_Try_Observe');
+                    Observer.Expect('returned', 'LookupCancel');
+                    Observer.Expect('before', '22:part-dirty/db@22:part-seed');
+                    Observer.Expect('try.ok', 'Yes');
+                    Observer.Expect('try.error.code', '');
+                    Observer.Expect('after', '22:part-dirty/db@22:part-seed');
+                    Observer.Expect('trace', 'P.DIRTY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Cancel_Part_UpdateTrue_Try_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Cancel_Part_UpdateTrue_Try_Observe');
+                    Observer.Expect('returned', 'LookupCancel');
+                    Observer.Expect('before', '23:part-dirty/db@23:part-seed');
+                    Observer.Expect('fatal|text', 'Call to the function ''MODIFY'' is not allowed inside the call to ''MR_Cancel_Part_UpdateTrue_Try_Observe'' when it is used as a TryFunction.');
+                    Observer.Expect('fatal|code', 'TryFunctionWrite');
+                    Observer.Expect('phase.at-fatal', 'before-post-operation');
+                    Observer.Expect('trace.at-fatal', 'P.DIRTY;P.PAGE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Cancel_Part_SaveRecord_Try_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Cancel_Part_SaveRecord_Try_Observe');
+                    Observer.Expect('returned', 'LookupCancel');
+                    Observer.Expect('before', '24:part-dirty/db@24:part-seed');
+                    Observer.Expect('fatal|text', 'Call to the function ''MODIFY'' is not allowed inside the call to ''MR_Cancel_Part_SaveRecord_Try_Observe'' when it is used as a TryFunction.');
+                    Observer.Expect('fatal|code', 'TryFunctionWrite');
+                    Observer.Expect('phase.at-fatal', 'before-post-operation');
+                    Observer.Expect('trace.at-fatal', 'P.DIRTY;P.PAGE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Open_Host_UpdateFalse_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Open_Host_UpdateFalse_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '25:host-dirty/db@25:host-seed');
+                    Observer.Expect('after', '25:host-dirty/db@25:host-seed');
+                    Observer.Expect('trace.in-action', 'H.DIRTY;');
+                    Observer.Expect('after.invoke', '25:host-seed/db@25:host-seed');
+                    Observer.Expect('trace.after-invoke', 'H.DIRTY;H.AGR;H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Open_Host_UpdateTrue_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Open_Host_UpdateTrue_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '26:host-dirty/db@26:host-seed');
+                    Observer.Expect('after', '26:host-dirty/db@26:host-dirty');
+                    Observer.Expect('trace.in-action', 'H.DIRTY;H.PAGE.MODIFY;H.TABLE.MODIFY;');
+                    Observer.Expect('after.invoke', '26:host-dirty/db@26:host-dirty');
+                    Observer.Expect('trace.after-invoke', 'H.DIRTY;H.PAGE.MODIFY;H.TABLE.MODIFY;H.AGR;H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Open_Host_SaveRecord_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Open_Host_SaveRecord_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '27:host-dirty/db@27:host-seed');
+                    Observer.Expect('after', '27:host-dirty/db@27:host-dirty');
+                    Observer.Expect('trace.in-action', 'H.DIRTY;H.PAGE.MODIFY;H.TABLE.MODIFY;');
+                    Observer.Expect('after.invoke', '27:host-dirty/db@27:host-dirty');
+                    Observer.Expect('trace.after-invoke', 'H.DIRTY;H.PAGE.MODIFY;H.TABLE.MODIFY;H.AGR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Open_Part_UpdateFalse_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Open_Part_UpdateFalse_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '28:part-dirty/db@28:part-seed');
+                    Observer.Expect('after', '28:part-dirty/db@28:part-seed');
+                    Observer.Expect('trace.in-action', 'P.DIRTY;');
+                    Observer.Expect('after.invoke', '28:part-seed/db@28:part-seed');
+                    Observer.Expect('trace.after-invoke', 'P.DIRTY;H.AGR;H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Open_Part_UpdateTrue_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Open_Part_UpdateTrue_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '29:part-dirty/db@29:part-seed');
+                    Observer.Expect('after', '29:part-dirty/db@29:part-dirty');
+                    Observer.Expect('trace.in-action', 'P.DIRTY;P.PAGE.MODIFY;P.TABLE.MODIFY;');
+                    Observer.Expect('after.invoke', '29:part-dirty/db@29:part-dirty');
+                    Observer.Expect('trace.after-invoke', 'P.DIRTY;P.PAGE.MODIFY;P.TABLE.MODIFY;H.AGR;H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MR_Open_Part_SaveRecord_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MR_Open_Part_SaveRecord_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '30:part-dirty/db@30:part-seed');
+                    Observer.Expect('after', '30:part-dirty/db@30:part-dirty');
+                    Observer.Expect('trace.in-action', 'P.DIRTY;P.PAGE.MODIFY;P.TABLE.MODIFY;');
+                    Observer.Expect('after.invoke', '30:part-dirty/db@30:part-dirty');
+                    Observer.Expect('trace.after-invoke', 'P.DIRTY;P.PAGE.MODIFY;P.TABLE.MODIFY;H.AGR;H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRL_NeverRun_SetRecord_PartAccess_Observe':
+                begin
+                    Observer.Expect('db.before', '1010:H=host-seed;P=part-seed');
+                    Observer.Expect('fresh.trace.before', '');
+                    Observer.Expect('fresh.ok', 'Yes');
+                    Observer.Expect('fresh.error.code', '');
+                    Observer.Expect('fresh.value', '0:/db@1010:part-seed');
+                    Observer.Expect('fresh.trace.after', '');
+                    Observer.Expect('db.after', '1010:H=host-seed;P=part-seed');
+                    Observer.Expect('case', 'MRL_NeverRun_SetRecord_PartAccess_Observe');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRL_Clear_AfterModal_PartAccess_Observe':
+                begin
+                    Observer.Expect('first.answer', 'OK');
+                    Observer.Expect('before.clear.trace.before', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;P.DIRTY;');
+                    Observer.Expect('before.clear.ok', 'Yes');
+                    Observer.Expect('before.clear.error.code', '');
+                    Observer.Expect('before.clear.value', '1011:part-dirty/db@1011:part-seed');
+                    Observer.Expect('before.clear.trace.after', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;P.DIRTY;');
+                    Observer.Expect('db.before', '1011:H=host-seed;P=part-seed');
+                    Observer.Expect('after.clear.trace.before', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;P.DIRTY;');
+                    Observer.Expect('after.clear.ok', 'Yes');
+                    Observer.Expect('after.clear.error.code', '');
+                    Observer.Expect('after.clear.value', '0:/db@1011:part-seed');
+                    Observer.Expect('after.clear.trace.after', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;P.DIRTY;');
+                    Observer.Expect('db.after', '1011:H=host-seed;P=part-seed');
+                    Observer.Expect('case', 'MRL_Clear_AfterModal_PartAccess_Observe');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRL_RepeatOK_SetDifferentRecord_Observe':
+                begin
+                    Observer.Expect('first.answer', 'OK');
+                    Observer.Expect('first.trace.before', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;P.DIRTY;');
+                    Observer.Expect('first.ok', 'Yes');
+                    Observer.Expect('first.error.code', '');
+                    Observer.Expect('first.value', '1012:part-dirty/db@1012:part-seed');
+                    Observer.Expect('first.trace.after', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;P.DIRTY;');
+                    Observer.Expect('first.db.before', '1012:H=host-seed;P=part-seed');
+                    Observer.Expect('second.db.before', '1013:H=host-seed;P=part-seed');
+                    Observer.Expect('second.answer', 'OK');
+                    Observer.Expect('second.trace.before', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('second.ok', 'Yes');
+                    Observer.Expect('second.error.code', '');
+                    Observer.Expect('second.value', '1013:part-seed/db@1013:part-seed');
+                    Observer.Expect('second.trace.after', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('first.db.after', '1012:H=host-seed;P=part-seed');
+                    Observer.Expect('second.db.after', '1013:H=host-seed;P=part-seed');
+                    Observer.Expect('case', 'MRL_RepeatOK_SetDifferentRecord_Observe');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRL_RepeatCancel_SetDifferentRecord_Observe':
+                begin
+                    Observer.Expect('first.answer', 'LookupCancel');
+                    Observer.Expect('first.trace.before', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;P.AGR;P.AGCR;H.AGR;H.AGCR;');
+                    Observer.Expect('first.ok', 'Yes');
+                    Observer.Expect('first.error.code', '');
+                    Observer.Expect('first.value', '1014:part-seed/db@1014:part-seed');
+                    Observer.Expect('first.trace.after', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;P.AGR;P.AGCR;H.AGR;H.AGCR;');
+                    Observer.Expect('first.db.before', '1014:H=host-seed;P=part-seed');
+                    Observer.Expect('second.db.before', '1015:H=host-seed;P=part-seed');
+                    Observer.Expect('second.answer', 'LookupOK');
+                    Observer.Expect('second.trace.before', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('second.ok', 'Yes');
+                    Observer.Expect('second.error.code', '');
+                    Observer.Expect('second.value', '1015:part-seed/db@1015:part-seed');
+                    Observer.Expect('second.trace.after', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('first.db.after', '1014:H=host-seed;P=part-seed');
+                    Observer.Expect('second.db.after', '1015:H=host-seed;P=part-seed');
+                    Observer.Expect('case', 'MRL_RepeatCancel_SetDifferentRecord_Observe');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRL_FirstRunHandlerError_TryPartAccess_Observe':
+                begin
+                    Observer.Expect('db.before', '1016:H=host-seed;P=part-seed');
+                    Observer.Expect('run.ok', 'No');
+                    Observer.Expect('run.error.code', 'Dialog');
+                    Observer.Expect('run.answer', 'None');
+                    Observer.Expect('after.error.trace.before', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('after.error.ok', 'Yes');
+                    Observer.Expect('after.error.error.code', '');
+                    Observer.Expect('after.error.value', '0:/db@1016:part-seed');
+                    Observer.Expect('after.error.trace.after', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('db.after', '1016:H=host-seed;P=part-seed');
+                    Observer.Expect('case', 'MRL_FirstRunHandlerError_TryPartAccess_Observe');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRL_SecondRunHandlerError_TryPartAccess_Observe':
+                begin
+                    Observer.Expect('first.answer', 'OK');
+                    Observer.Expect('first.trace.before', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;P.DIRTY;');
+                    Observer.Expect('first.ok', 'Yes');
+                    Observer.Expect('first.error.code', '');
+                    Observer.Expect('first.value', '1017:part-dirty/db@1017:part-seed');
+                    Observer.Expect('first.trace.after', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;P.DIRTY;');
+                    Observer.Expect('first.db.before', '1017:H=host-seed;P=part-seed');
+                    Observer.Expect('second.db.before', '1018:H=host-seed;P=part-seed');
+                    Observer.Expect('run.ok', 'No');
+                    Observer.Expect('run.error.code', 'Dialog');
+                    Observer.Expect('run.answer', 'None');
+                    Observer.Expect('after.error.trace.before', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('after.error.ok', 'Yes');
+                    Observer.Expect('after.error.error.code', '');
+                    Observer.Expect('after.error.value', '0:/db@1018:part-seed');
+                    Observer.Expect('after.error.trace.after', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('first.db.after', '1017:H=host-seed;P=part-seed');
+                    Observer.Expect('second.db.after', '1018:H=host-seed;P=part-seed');
+                    Observer.Expect('case', 'MRL_SecondRunHandlerError_TryPartAccess_Observe');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRL_RepeatOK_WithoutSetRecord_Observe':
+                begin
+                    Observer.Expect('first.answer', 'OK');
+                    Observer.Expect('first.trace.before', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;P.DIRTY;');
+                    Observer.Expect('first.ok', 'Yes');
+                    Observer.Expect('first.error.code', '');
+                    Observer.Expect('first.value', '1019:part-dirty/db@1019:part-seed');
+                    Observer.Expect('first.trace.after', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;P.DIRTY;');
+                    Observer.Expect('db.before', '1019:H=host-seed;P=part-seed');
+                    Observer.Expect('second.answer', 'OK');
+                    Observer.Expect('second.trace.before', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;P.DIRTY;H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('second.ok', 'Yes');
+                    Observer.Expect('second.error.code', '');
+                    Observer.Expect('second.value', '1019:part-seed/db@1019:part-seed');
+                    Observer.Expect('second.trace.after', 'H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;P.DIRTY;H.AGR;H.AGCR;P.AGR;P.AGR;P.AGCR;');
+                    Observer.Expect('db.after', '1019:H=host-seed;P=part-seed');
+                    Observer.Expect('case', 'MRL_RepeatOK_WithoutSetRecord_Observe');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRO_OpenOwn_Host_UpdateFalse_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MRO_OpenOwn_Host_UpdateFalse_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '2010:host-dirty/db@2010:host-seed');
+                    Observer.Expect('after', '2010:host-dirty/db@2010:host-seed');
+                    Observer.Expect('phase', 'after-own-operation');
+                    Observer.Expect('trace', 'H.DIRTY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRO_OpenOwn_Host_UpdateFalse_Try_Observe':
+                begin
+                    Observer.Expect('case', 'MRO_OpenOwn_Host_UpdateFalse_Try_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '2011:host-dirty/db@2011:host-seed');
+                    Observer.Expect('after', '2011:host-dirty/db@2011:host-seed');
+                    Observer.Expect('phase', 'after-own-operation');
+                    Observer.Expect('trace', 'H.DIRTY;');
+                    Observer.Expect('try.ok', 'Yes');
+                    Observer.Expect('try.error.code', '');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRO_OpenOwn_Host_UpdateTrue_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MRO_OpenOwn_Host_UpdateTrue_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '2012:host-dirty/db@2012:host-seed');
+                    Observer.Expect('after', '2012:host-dirty/db@2012:host-dirty');
+                    Observer.Expect('phase', 'after-own-operation');
+                    Observer.Expect('trace', 'H.DIRTY;H.PAGE.MODIFY;H.TABLE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRO_OpenOwn_Host_UpdateTrue_Try_Observe':
+                begin
+                    Observer.Expect('fatal|text', 'Call to the function ''MODIFY'' is not allowed inside the call to ''MRDialogHandler'' when it is used as a TryFunction.');
+                    Observer.Expect('fatal|code', 'TryFunctionWrite');
+                    Observer.Expect('case', 'MRO_OpenOwn_Host_UpdateTrue_Try_Observe');
+                    Observer.Expect('phase.at-fatal', 'before-own-operation');
+                    Observer.Expect('trace.at-fatal', 'H.DIRTY;H.PAGE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRO_OpenOwn_Host_SaveRecord_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MRO_OpenOwn_Host_SaveRecord_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '2014:host-dirty/db@2014:host-seed');
+                    Observer.Expect('after', '2014:host-dirty/db@2014:host-dirty');
+                    Observer.Expect('phase', 'after-own-operation');
+                    Observer.Expect('trace', 'H.DIRTY;H.PAGE.MODIFY;H.TABLE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRO_OpenOwn_Host_SaveRecord_Try_Observe':
+                begin
+                    Observer.Expect('fatal|text', 'Call to the function ''MODIFY'' is not allowed inside the call to ''MRDialogHandler'' when it is used as a TryFunction.');
+                    Observer.Expect('fatal|code', 'TryFunctionWrite');
+                    Observer.Expect('case', 'MRO_OpenOwn_Host_SaveRecord_Try_Observe');
+                    Observer.Expect('phase.at-fatal', 'before-own-operation');
+                    Observer.Expect('trace.at-fatal', 'H.DIRTY;H.PAGE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRO_OpenOwn_Part_UpdateFalse_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MRO_OpenOwn_Part_UpdateFalse_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '2016:part-dirty/db@2016:part-seed');
+                    Observer.Expect('after', '2016:part-dirty/db@2016:part-seed');
+                    Observer.Expect('phase', 'after-own-operation');
+                    Observer.Expect('trace', 'P.DIRTY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRO_OpenOwn_Part_UpdateFalse_Try_Observe':
+                begin
+                    Observer.Expect('case', 'MRO_OpenOwn_Part_UpdateFalse_Try_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '2017:part-dirty/db@2017:part-seed');
+                    Observer.Expect('after', '2017:part-dirty/db@2017:part-seed');
+                    Observer.Expect('phase', 'after-own-operation');
+                    Observer.Expect('trace', 'P.DIRTY;');
+                    Observer.Expect('try.ok', 'Yes');
+                    Observer.Expect('try.error.code', '');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRO_OpenOwn_Part_UpdateTrue_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MRO_OpenOwn_Part_UpdateTrue_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '2018:part-dirty/db@2018:part-seed');
+                    Observer.Expect('after', '2018:part-dirty/db@2018:part-dirty');
+                    Observer.Expect('phase', 'after-own-operation');
+                    Observer.Expect('trace', 'P.DIRTY;P.PAGE.MODIFY;P.TABLE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRO_OpenOwn_Part_UpdateTrue_Try_Observe':
+                begin
+                    Observer.Expect('fatal|text', 'Call to the function ''MODIFY'' is not allowed inside the call to ''MRDialogHandler'' when it is used as a TryFunction.');
+                    Observer.Expect('fatal|code', 'TryFunctionWrite');
+                    Observer.Expect('case', 'MRO_OpenOwn_Part_UpdateTrue_Try_Observe');
+                    Observer.Expect('phase.at-fatal', 'before-own-operation');
+                    Observer.Expect('trace.at-fatal', 'P.DIRTY;P.PAGE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRO_OpenOwn_Part_SaveRecord_Direct_Observe':
+                begin
+                    Observer.Expect('case', 'MRO_OpenOwn_Part_SaveRecord_Direct_Observe');
+                    Observer.Expect('returned', 'LookupOK');
+                    Observer.Expect('before', '2020:part-dirty/db@2020:part-seed');
+                    Observer.Expect('after', '2020:part-dirty/db@2020:part-dirty');
+                    Observer.Expect('phase', 'after-own-operation');
+                    Observer.Expect('trace', 'P.DIRTY;P.PAGE.MODIFY;P.TABLE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRO_OpenOwn_Part_SaveRecord_Try_Observe':
+                begin
+                    Observer.Expect('fatal|text', 'Call to the function ''MODIFY'' is not allowed inside the call to ''MRDialogHandler'' when it is used as a TryFunction.');
+                    Observer.Expect('fatal|code', 'TryFunctionWrite');
+                    Observer.Expect('case', 'MRO_OpenOwn_Part_SaveRecord_Try_Observe');
+                    Observer.Expect('phase.at-fatal', 'before-own-operation');
+                    Observer.Expect('trace.at-fatal', 'P.DIRTY;P.PAGE.MODIFY;');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRF_NeverRun_DefaultPartInit_Observe':
+                begin
+                    Observer.Expect('trace.before.getters', '');
+                    Observer.Expect('first.trace.before', '');
+                    Observer.Expect('first.ok', 'Yes');
+                    Observer.Expect('first.error.code', '');
+                    Observer.Expect('first.error.text', '');
+                    Observer.Expect('first.value', '1/0/0/');
+                    Observer.Expect('first.trace.after', 'Q.INIT;');
+                    Observer.Expect('second.trace.before', 'Q.INIT;');
+                    Observer.Expect('second.ok', 'Yes');
+                    Observer.Expect('second.error.code', '');
+                    Observer.Expect('second.error.text', '');
+                    Observer.Expect('second.value', '1/0/0/');
+                    Observer.Expect('second.trace.after', 'Q.INIT;');
+                    Observer.Expect('db.part', 'part-seed');
+                    Observer.Expect('db.host', 'host-seed');
+                    Observer.Expect('case', 'MRF_NeverRun_DefaultPartInit_Observe');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'MRF_HandlerError_DefaultPartInit_Observe':
+                begin
+                    Observer.Expect('run.ok', 'No');
+                    Observer.Expect('run.error.code', 'Dialog');
+                    Observer.Expect('run.error.text', 'default part handler failure');
+                    Observer.Expect('trace.before.getters', 'Q.INIT;R.OPEN;Q.OPEN;Q.AGR;Q.AGR;Q.AGCR;R.HANDLER.ERROR;');
+                    Observer.Expect('first.trace.before', 'Q.INIT;R.OPEN;Q.OPEN;Q.AGR;Q.AGR;Q.AGCR;R.HANDLER.ERROR;');
+                    Observer.Expect('first.ok', 'Yes');
+                    Observer.Expect('first.error.code', '');
+                    Observer.Expect('first.error.text', '');
+                    Observer.Expect('first.value', '1/0/0/');
+                    Observer.Expect('first.trace.after', 'Q.INIT;R.OPEN;Q.OPEN;Q.AGR;Q.AGR;Q.AGCR;R.HANDLER.ERROR;Q.INIT;');
+                    Observer.Expect('second.trace.before', 'Q.INIT;R.OPEN;Q.OPEN;Q.AGR;Q.AGR;Q.AGCR;R.HANDLER.ERROR;Q.INIT;');
+                    Observer.Expect('second.ok', 'Yes');
+                    Observer.Expect('second.error.code', '');
+                    Observer.Expect('second.error.text', '');
+                    Observer.Expect('second.value', '1/0/0/');
+                    Observer.Expect('second.trace.after', 'Q.INIT;R.OPEN;Q.OPEN;Q.AGR;Q.AGR;Q.AGCR;R.HANDLER.ERROR;Q.INIT;');
+                    Observer.Expect('db.part', 'part-seed');
+                    Observer.Expect('db.host', 'host-seed');
+                    Observer.Expect('case', 'MRF_HandlerError_DefaultPartInit_Observe');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            else Error('Unknown modal return contract: %1', Identity);
+        end;
+    end;
 }

@@ -5,3 +5,13 @@
 # Several lines with the same old_key: the facts must be held by the union of the new keys.
 # Never edit or remove a line: the runner and later bumps read the whole file.
 old_key	new_key
+# Observation transport companions merge into the asserted primary; full raw chunks remain bound outside the source.
+al-language/92648/MRL_NeverRun_SetRecord_PartAccess_Observe_More1	al-language/92648/MRL_NeverRun_SetRecord_PartAccess_Observe
+al-language/92648/MRL_Clear_AfterModal_PartAccess_Observe_More1	al-language/92648/MRL_Clear_AfterModal_PartAccess_Observe
+al-language/92648/MRL_RepeatOK_SetDifferentRecord_Observe_More1	al-language/92648/MRL_RepeatOK_SetDifferentRecord_Observe
+al-language/92648/MRL_RepeatCancel_SetDifferentRecord_Observe_More1	al-language/92648/MRL_RepeatCancel_SetDifferentRecord_Observe
+al-language/92648/MRL_FirstRunHandlerError_TryPartAccess_Observe_More1	al-language/92648/MRL_FirstRunHandlerError_TryPartAccess_Observe
+al-language/92648/MRL_SecondRunHandlerError_TryPartAccess_Observe_More1	al-language/92648/MRL_SecondRunHandlerError_TryPartAccess_Observe
+al-language/92648/MRL_RepeatOK_WithoutSetRecord_Observe_More1	al-language/92648/MRL_RepeatOK_WithoutSetRecord_Observe
+al-language/92648/MRF_NeverRun_DefaultPartInit_Observe_More1	al-language/92648/MRF_NeverRun_DefaultPartInit_Observe
+al-language/92648/MRF_HandlerError_DefaultPartInit_Observe_More1	al-language/92648/MRF_HandlerError_DefaultPartInit_Observe
