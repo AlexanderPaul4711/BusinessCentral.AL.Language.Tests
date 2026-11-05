@@ -1022,7 +1022,8 @@ codeunit 92648 "LT Y37 PC Tests"
         end;
     end;
 
-    // Observation bootstrap: exact native telemetry only, no inferred VM behavior.
+    // Exact complete observations at writer40348e72 matched on native BC27.5/28.5/29.0.
+    // Action preprocessing remains a separate observable boundary, not a pre-invoke Rec proof.
     local procedure ClpDetailedOpen(RequestClose: Boolean; PermitClose: Boolean; Identity: Text)
     var
         OperationTrace: Text;
@@ -1087,7 +1088,8 @@ codeunit 92648 "LT Y37 PC Tests"
         Observer.Observe('cleanup.ok', ClpFlag(Cleaned));
         Observer.Observe('cleanup.queries', Format(ClpLog.QueryCount()));
         Observer.Observe('capture.end', 'COMPLETE');
-        Observer.Finish();
+        ClpDetailedExpect(Identity);
+        Observer.Verify();
     end;
 
     [Test]
@@ -1097,11 +1099,6 @@ codeunit 92648 "LT Y37 PC Tests"
         ClpDetailedOpen(false, true, 'CLP_Detail_AGCR_NoClose_Observe');
     end;
 
-    [Test]
-    procedure CLP_Detail_AGCR_NoClose_Observe_More1()
-    begin
-        Observer.More();
-    end;
 
     [Test]
     procedure CLP_Detail_AGCR_Allowed_Observe()
@@ -1110,11 +1107,6 @@ codeunit 92648 "LT Y37 PC Tests"
         ClpDetailedOpen(true, true, 'CLP_Detail_AGCR_Allowed_Observe');
     end;
 
-    [Test]
-    procedure CLP_Detail_AGCR_Allowed_Observe_More1()
-    begin
-        Observer.More();
-    end;
 
     [Test]
     procedure CLP_Detail_AGCR_Veto_Observe()
@@ -1123,15 +1115,81 @@ codeunit 92648 "LT Y37 PC Tests"
         ClpDetailedOpen(true, false, 'CLP_Detail_AGCR_Veto_Observe');
     end;
 
-    [Test]
-    procedure CLP_Detail_AGCR_Veto_Observe_More1()
-    begin
-        Observer.More();
-    end;
 
     [TryFunction]
     local procedure ClpTryDetailReadAction()
     begin
         ClpParent.DetailReadRecord.Invoke();
+    end;
+
+    local procedure ClpDetailedExpect(Identity: Text)
+    begin
+        case Identity of
+            'CLP_Detail_AGCR_NoClose_Observe':
+                begin
+                    Observer.Expect('detail.case', 'CLP_Detail_AGCR_NoClose_Observe');
+                    Observer.Expect('operation.trace', 'DETAIL.BEFORE.OPEN;PART.INIT;D:OPEN.before:id=0:agcr=0:q=0:probed=No;PARENT.OPEN;D:OPEN.after:id=1:agcr=0:q=0:probed=No;PART.OPEN;D:AGCR.entry:id=1:agcr=1:q=0:probed=No;PARENT.AGCR;NO.CLOSE;D:PART.before:id=1:agcr=1:q=0:probed=Yes;BEFORE.PART;PART.TOUCH:42:1;AFTER.PART:42:1;D:PART.after:42:1:id=1:agcr=1:q=0:probed=Yes;DETAIL.OPERATION.END;');
+                    Observer.Expect('operation.queries', '0');
+                    Observer.Expect('operation.agcr', '1');
+                    Observer.Expect('follow.before.ok', 'T');
+                    Observer.Expect('follow.before.id', '1');
+                    Observer.Expect('follow.before.error.code', '');
+                    Observer.Expect('follow.action.ok', 'T');
+                    Observer.Expect('follow.action.error.code', '');
+                    Observer.Expect('follow.trace', 'D:FOLLOW.ACTION:id=1:agcr=1:q=0:probed=Yes;D:AGCR.entry:id=1:agcr=2:q=0:probed=Yes;');
+                    Observer.Expect('follow.queries', '0');
+                    Observer.Expect('follow.agcr', '2');
+                    Observer.Expect('follow.after.ok', 'T');
+                    Observer.Expect('follow.after.id', '1');
+                    Observer.Expect('follow.after.error.code', '');
+                    Observer.Expect('cleanup.ok', 'T');
+                    Observer.Expect('cleanup.queries', '1');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'CLP_Detail_AGCR_Allowed_Observe':
+                begin
+                    Observer.Expect('detail.case', 'CLP_Detail_AGCR_Allowed_Observe');
+                    Observer.Expect('operation.trace', 'DETAIL.BEFORE.OPEN;PART.INIT;D:OPEN.before:id=0:agcr=0:q=0:probed=No;PARENT.OPEN;D:OPEN.after:id=1:agcr=0:q=0:probed=No;PART.OPEN;D:AGCR.entry:id=1:agcr=1:q=0:probed=No;PARENT.AGCR;D:CALL.CLOSE.before:id=1:agcr=1:q=0:probed=Yes;BEFORE.CLOSE;PARENT.QUERY:OK;D:QUERY.entry:OK:id=1:agcr=1:q=1:probed=Yes;D:QUERY.return:Yes:id=1:agcr=1:q=1:probed=Yes;PART.CLOSE;D:CLOSE.entry:id=1:agcr=1:q=1:probed=Yes;PARENT.CLOSE;AFTER.CLOSE;D:CALL.CLOSE.after:id=1:agcr=1:q=1:probed=Yes;D:PART.before:id=1:agcr=1:q=1:probed=Yes;BEFORE.PART;PART.TOUCH:1042:1;AFTER.PART:1042:1;D:PART.after:1042:1:id=1:agcr=1:q=1:probed=Yes;DETAIL.OPERATION.END;');
+                    Observer.Expect('operation.queries', '1');
+                    Observer.Expect('operation.agcr', '1');
+                    Observer.Expect('follow.before.ok', 'F');
+                    Observer.Expect('follow.before.id', '-777');
+                    Observer.Expect('follow.before.error.code', 'TestPageNotOpened');
+                    Observer.Expect('follow.action.ok', 'F');
+                    Observer.Expect('follow.action.error.code', 'TestPageNotOpened');
+                    Observer.Expect('follow.trace', '');
+                    Observer.Expect('follow.queries', '1');
+                    Observer.Expect('follow.agcr', '1');
+                    Observer.Expect('follow.after.ok', 'F');
+                    Observer.Expect('follow.after.id', '-777');
+                    Observer.Expect('follow.after.error.code', 'TestPageNotOpened');
+                    Observer.Expect('cleanup.ok', 'F');
+                    Observer.Expect('cleanup.queries', '1');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            'CLP_Detail_AGCR_Veto_Observe':
+                begin
+                    Observer.Expect('detail.case', 'CLP_Detail_AGCR_Veto_Observe');
+                    Observer.Expect('operation.trace', 'DETAIL.BEFORE.OPEN;PART.INIT;D:OPEN.before:id=0:agcr=0:q=0:probed=No;PARENT.OPEN;D:OPEN.after:id=1:agcr=0:q=0:probed=No;PART.OPEN;D:AGCR.entry:id=1:agcr=1:q=0:probed=No;PARENT.AGCR;D:CALL.CLOSE.before:id=1:agcr=1:q=0:probed=Yes;BEFORE.CLOSE;PARENT.QUERY:OK;D:QUERY.entry:OK:id=1:agcr=1:q=1:probed=Yes;D:QUERY.return:No:id=1:agcr=1:q=1:probed=Yes;AFTER.CLOSE;D:CALL.CLOSE.after:id=1:agcr=1:q=1:probed=Yes;D:PART.before:id=1:agcr=1:q=1:probed=Yes;BEFORE.PART;PART.TOUCH:42:1;AFTER.PART:42:1;D:PART.after:42:1:id=1:agcr=1:q=1:probed=Yes;PARENT.QUERY:OK;D:QUERY.entry:OK:id=1:agcr=1:q=2:probed=Yes;D:QUERY.return:No:id=1:agcr=1:q=2:probed=Yes;DETAIL.OPERATION.END;');
+                    Observer.Expect('operation.queries', '2');
+                    Observer.Expect('operation.agcr', '1');
+                    Observer.Expect('follow.before.ok', 'T');
+                    Observer.Expect('follow.before.id', '0');
+                    Observer.Expect('follow.before.error.code', '');
+                    Observer.Expect('follow.action.ok', 'T');
+                    Observer.Expect('follow.action.error.code', '');
+                    Observer.Expect('follow.trace', 'D:FOLLOW.ACTION:id=1:agcr=1:q=2:probed=Yes;D:AGCR.entry:id=1:agcr=2:q=2:probed=Yes;');
+                    Observer.Expect('follow.queries', '2');
+                    Observer.Expect('follow.agcr', '2');
+                    Observer.Expect('follow.after.ok', 'T');
+                    Observer.Expect('follow.after.id', '1');
+                    Observer.Expect('follow.after.error.code', '');
+                    Observer.Expect('cleanup.ok', 'T');
+                    Observer.Expect('cleanup.queries', '3');
+                    Observer.Expect('capture.end', 'COMPLETE');
+                end;
+            else
+                Error('Unknown detailed close observation: %1', Identity);
+        end;
     end;
 }

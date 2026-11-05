@@ -90,6 +90,6 @@ A new topic gets a line here in the same pull request (standing rule 8 in CONTRI
 
 `parts/Y37PartAfterClose.al` includes an observe-only bootstrap for trigger Close followed by an in-body part call, with no-close, veto and already-open action controls. Catch-context and external follow-up observations are separate.
 
-The CLP_Detail_AGCR observation bootstrap records opt-in parent Rec/AGCR/query telemetry before cleanup; existing close-part contracts stay unchanged.
+The CLP_Detail_AGCR contracts assert complete opt-in parent Rec/AGCR/query telemetry before cleanup and separate follow-up observations, captured identically on native BC27.5/28.5/29.0 at writer40348e72. Existing close-part contracts stay unchanged.
 
-The separate follow-action bootstrap freezes the pre-invoke external field result, observes a read-only action and then freezes the post-invoke field and trace suffix. Action preprocessing may affect the AL Rec, so the action marker does not prove its pre-invoke value. More1 cases retain complete observation continuations.
+The follow-action contracts freeze the pre-invoke external field result, observes a read-only action and then freezes the post-invoke field and trace suffix. Action preprocessing may affect the AL Rec, so the action marker does not prove its pre-invoke value. Bootstrap-only More1 transport methods are absent from the asserted contracts; their original40348e72 raw captures remain separately bound.
