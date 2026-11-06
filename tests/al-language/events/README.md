@@ -4,6 +4,8 @@ Event publishers and subscribers, BindSubscription, platform trigger events, sub
 
 ## Topics
 
+- `event-only-actions/`: page/extension actions without bodies and their named action subscribers (native observation bootstrap).
+
 - (area folder itself): 18 AL files that are about the area as a whole or were not given a topic yet.
 - `binding-senders/`: binding, senders and parameters of subscribers (10 AL files).
 - `extension-events/`: events of extension objects (3 AL files).
