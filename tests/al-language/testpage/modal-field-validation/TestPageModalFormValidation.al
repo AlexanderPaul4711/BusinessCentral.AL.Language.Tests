@@ -30,8 +30,15 @@ codeunit 69991 "PAG Modal Form Tests"
         Identity := Name; Mode := NewMode; Ending := EndingAction; L.Configure(Mode);
         R.Get(1); Pg.SetRecord(R); Pg.LookupMode(Lookup);
         O.Observe('case', Identity);
-        Answer := Pg.RunModal();
-        O.Observe('result', Format(Answer)); Stored('returned');
+        if Ending in [2, 3] then begin
+            asserterror Answer := Pg.RunModal();
+            O.ObserveError('runmodal.error');
+            O.Observe('result', 'NO_RETURN_AFTER_HANDLER_CLOSE');
+        end else begin
+            Answer := Pg.RunModal();
+            O.Observe('result', Format(Answer));
+        end;
+        if Ending in [2, 3] then Stored('postcatch') else Stored('returned');
         O.Observe('trace', L.ReadTrace()); O.Observe('capture.end', 'COMPLETE');
         O.Finish();
     end;
@@ -50,9 +57,13 @@ codeunit 69991 "PAG Modal Form Tests"
             O.ObserveError('cancel.error');
             O.Observe('after.refused.cancel', P.Value.Value());
             P.Close();
+            Stored('closed.inside'); O.Observe('trace.closed.inside', L.ReadTrace());
         end else begin
             if Ending = 1 then P.Cancel().Invoke() else
-                if Ending = 3 then P.Close() else P.OK().Invoke();
+                if Ending = 3 then begin
+                    P.Close();
+                    Stored('closed.inside'); O.Observe('trace.closed.inside', L.ReadTrace());
+                end else P.OK().Invoke();
             if Mode = 2 then begin
                 Stored('after.action'); O.Observe('trace.after.action', L.ReadTrace());
             end;
