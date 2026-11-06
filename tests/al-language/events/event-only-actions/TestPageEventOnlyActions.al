@@ -594,6 +594,114 @@ codeunit 69994 "PAG EventOnly Tests"
                     O.Expect('trace.closed', '');
                     O.Expect('capture.end', 'COMPLETE');
                 end;
+            'EventOnly_BaseEditAfterError':
+                begin
+                    O.Expect('case', 'EventOnly_BaseEditAfterError');
+                    O.Expect('displayed.open', '5');
+                    O.Expect('stored.open', '5');
+                    O.Expect('metadata.ok', 'Yes');
+                    O.Expect('visible', 'Yes');
+                    O.Expect('enabled', 'Yes');
+                    O.Expect('invoke', 'REFUSED');
+                    O.Expect('invoke.error|text', 'event-only subscriber failure: both.after');
+                    O.Expect('invoke.error|code', 'TestWrapped:Dialog');
+                    O.Expect('displayed.after', '5');
+                    O.Expect('stored.after', '5');
+                    O.Expect('trace.before.close', 'open;both.before:1:5;both.after:1:8;');
+                    O.Expect('stored.closed', '5');
+                    O.Expect('trace.closed', 'open;both.before:1:5;both.after:1:8;close;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
+            'EventOnly_BaseEditBeforeError':
+                begin
+                    O.Expect('case', 'EventOnly_BaseEditBeforeError');
+                    O.Expect('displayed.open', '5');
+                    O.Expect('stored.open', '5');
+                    O.Expect('metadata.ok', 'Yes');
+                    O.Expect('visible', 'Yes');
+                    O.Expect('enabled', 'Yes');
+                    O.Expect('invoke', 'REFUSED');
+                    O.Expect('invoke.error|text', 'event-only subscriber failure: both.before');
+                    O.Expect('invoke.error|code', 'TestWrapped:Dialog');
+                    O.Expect('displayed.after', '5');
+                    O.Expect('stored.after', '5');
+                    O.Expect('trace.before.close', 'open;both.before:1:5;');
+                    O.Expect('stored.closed', '5');
+                    O.Expect('trace.closed', 'open;both.before:1:5;close;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
+            'EventOnly_ExtensionEditAfterError':
+                begin
+                    O.Expect('case', 'EventOnly_ExtensionEditAfterError');
+                    O.Expect('displayed.open', 'seed');
+                    O.Expect('stored.open', 'seed');
+                    O.Expect('metadata.ok', 'Yes');
+                    O.Expect('visible', 'Yes');
+                    O.Expect('enabled', 'Yes');
+                    O.Expect('invoke', 'REFUSED');
+                    O.Expect('invoke.error|text', 'event-only subscriber failure: extension.both.after');
+                    O.Expect('invoke.error|code', 'TestWrapped:Dialog');
+                    O.Expect('displayed.after', 'seed');
+                    O.Expect('stored.after', 'seed');
+                    O.Expect('trace.before.close', 'extension.both.before:1:seed;extension.both.after:1:seed-B;');
+                    O.Expect('stored.closed', 'seed');
+                    O.Expect('trace.closed', 'extension.both.before:1:seed;extension.both.after:1:seed-B;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
+            'EventOnly_ExtensionEditBeforeError':
+                begin
+                    O.Expect('case', 'EventOnly_ExtensionEditBeforeError');
+                    O.Expect('displayed.open', 'seed');
+                    O.Expect('stored.open', 'seed');
+                    O.Expect('metadata.ok', 'Yes');
+                    O.Expect('visible', 'Yes');
+                    O.Expect('enabled', 'Yes');
+                    O.Expect('invoke', 'REFUSED');
+                    O.Expect('invoke.error|text', 'event-only subscriber failure: extension.both.before');
+                    O.Expect('invoke.error|code', 'TestWrapped:Dialog');
+                    O.Expect('displayed.after', 'seed');
+                    O.Expect('stored.after', 'seed');
+                    O.Expect('trace.before.close', 'extension.both.before:1:seed;');
+                    O.Expect('stored.closed', 'seed');
+                    O.Expect('trace.closed', 'extension.both.before:1:seed;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
+            'EventOnly_ViewCommitAfterError':
+                begin
+                    O.Expect('case', 'EventOnly_ViewCommitAfterError');
+                    O.Expect('displayed.open', '5');
+                    O.Expect('stored.open', '5');
+                    O.Expect('metadata.ok', 'Yes');
+                    O.Expect('visible', 'Yes');
+                    O.Expect('enabled', 'Yes');
+                    O.Expect('invoke', 'REFUSED');
+                    O.Expect('invoke.error|text', 'event-only subscriber failure: both.after');
+                    O.Expect('invoke.error|code', 'TestWrapped:Dialog');
+                    O.Expect('displayed.after', '5');
+                    O.Expect('stored.after', '8');
+                    O.Expect('trace.before.close', 'open;both.before:1:5;both.after:1:8;');
+                    O.Expect('stored.closed', '8');
+                    O.Expect('trace.closed', 'open;both.before:1:5;both.after:1:8;close;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
+            'EventOnly_ViewWriteAfterError':
+                begin
+                    O.Expect('case', 'EventOnly_ViewWriteAfterError');
+                    O.Expect('displayed.open', '5');
+                    O.Expect('stored.open', '5');
+                    O.Expect('metadata.ok', 'Yes');
+                    O.Expect('visible', 'Yes');
+                    O.Expect('enabled', 'Yes');
+                    O.Expect('invoke', 'REFUSED');
+                    O.Expect('invoke.error|text', 'event-only subscriber failure: both.after');
+                    O.Expect('invoke.error|code', 'TestWrapped:Dialog');
+                    O.Expect('displayed.after', '5');
+                    O.Expect('stored.after', '5');
+                    O.Expect('trace.before.close', 'open;both.before:1:5;both.after:1:8;');
+                    O.Expect('stored.closed', '5');
+                    O.Expect('trace.closed', 'open;both.before:1:5;both.after:1:8;close;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
             else Error('Unknown event-only observation: %1', Identity);
         end;
     end;
@@ -603,7 +711,7 @@ codeunit 69994 "PAG EventOnly Tests"
         O.Observe('displayed.after', P.Number.Value()); Stored('stored.after');
         O.Observe('trace.before.close', L.ReadTrace()); P.Close();
         Stored('stored.closed'); O.Observe('trace.closed', L.ReadTrace());
-        O.Observe('capture.end', 'COMPLETE'); O.Finish();
+        O.Observe('capture.end', 'COMPLETE'); VerifyObserved(); O.Verify();
     end;
 
     local procedure FinishExtensionErrorObservation(var P: TestPage "LT AO Dep Card" )
@@ -611,7 +719,7 @@ codeunit 69994 "PAG EventOnly Tests"
         O.Observe('displayed.after', P.Name.Value()); StoredExtension('stored.after');
         O.Observe('trace.before.close', L.ReadTrace()); P.Close();
         StoredExtension('stored.closed'); O.Observe('trace.closed', L.ReadTrace());
-        O.Observe('capture.end', 'COMPLETE'); O.Finish();
+        O.Observe('capture.end', 'COMPLETE'); VerifyObserved(); O.Verify();
     end;
 
     [Test]
