@@ -4,8 +4,11 @@
 codeunit 69992 "PAG EventOnly Log"
 {
     SingleInstance = true;
-    var Entries: Text; FailurePhase: Text;
-    procedure Reset() begin Entries := ''; FailurePhase := ''; end;
+    var Entries: Text; FailurePhase: Text; RequestedWritePhase: Text; CommitRequested: Boolean;
+    procedure Reset() begin Entries := ''; FailurePhase := ''; RequestedWritePhase := ''; CommitRequested := false; end;
+    procedure RequestWrite(Phase: Text; WithCommit: Boolean) begin RequestedWritePhase := Phase; CommitRequested := WithCommit; end;
+    procedure ShouldWrite(Phase: Text): Boolean begin exit(RequestedWritePhase = Phase); end;
+    procedure ShouldCommit(): Boolean begin exit(CommitRequested); end;
     procedure FailAt(Phase: Text) begin FailurePhase := Phase; end;
     procedure CheckFailure(Phase: Text) begin if Phase = FailurePhase then Error('event-only subscriber failure: %1', Phase); end;
     procedure Add(Entry: Text) begin Entries += Entry + ';'; end;
@@ -96,5 +99,5 @@ codeunit 69993 "PAG EventOnly Subscribers"
     begin L.Add(Phase + ':' + Format(Rec.Id) + ':' + Rec.Name); L.CheckFailure(Phase); Rec.Name += Suffix; end;
     local procedure Touch(Phase: Text; var Rec: Record "ALT Universal"; Delta: Integer)
     var L: Codeunit "PAG EventOnly Log";
-    begin L.Add(Phase + ':' + Format(Rec."Entry No.") + ':' + Format(Rec."Integer Field")); L.CheckFailure(Phase); Rec."Integer Field" += Delta; end;
+    begin L.Add(Phase + ':' + Format(Rec."Entry No.") + ':' + Format(Rec."Integer Field")); L.CheckFailure(Phase); Rec."Integer Field" += Delta; if L.ShouldWrite(Phase) then begin Rec.Modify(false); if L.ShouldCommit() then Commit(); end; end;
 }

@@ -597,4 +597,86 @@ codeunit 69994 "PAG EventOnly Tests"
             else Error('Unknown event-only observation: %1', Identity);
         end;
     end;
+
+    local procedure FinishErrorObservation(var P: TestPage "PAG EventOnly Page" )
+    begin
+        O.Observe('displayed.after', P.Number.Value()); Stored('stored.after');
+        O.Observe('trace.before.close', L.ReadTrace()); P.Close();
+        Stored('stored.closed'); O.Observe('trace.closed', L.ReadTrace());
+        O.Observe('capture.end', 'COMPLETE'); O.Finish();
+    end;
+
+    local procedure FinishExtensionErrorObservation(var P: TestPage "LT AO Dep Card" )
+    begin
+        O.Observe('displayed.after', P.Name.Value()); StoredExtension('stored.after');
+        O.Observe('trace.before.close', L.ReadTrace()); P.Close();
+        StoredExtension('stored.closed'); O.Observe('trace.closed', L.ReadTrace());
+        O.Observe('capture.end', 'COMPLETE'); O.Finish();
+    end;
+
+    [Test]
+    procedure EventOnly_BaseEditBeforeError()
+    var P: TestPage "PAG EventOnly Page"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); Identity := 'EventOnly_BaseEditBeforeError'; O.Observe('case', 'EventOnly_BaseEditBeforeError'); L.FailAt('both.before');
+        P.OpenEdit(); O.Observe('displayed.open', P.Number.Value()); Stored('stored.open');
+        Ok := ReadBaseMetadata(P, 1, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        asserterror P.BaseBoth.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        FinishErrorObservation(P);
+    end;
+
+    [Test]
+    procedure EventOnly_BaseEditAfterError()
+    var P: TestPage "PAG EventOnly Page"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); Identity := 'EventOnly_BaseEditAfterError'; O.Observe('case', 'EventOnly_BaseEditAfterError'); L.FailAt('both.after');
+        P.OpenEdit(); O.Observe('displayed.open', P.Number.Value()); Stored('stored.open');
+        Ok := ReadBaseMetadata(P, 1, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        asserterror P.BaseBoth.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        FinishErrorObservation(P);
+    end;
+
+    [Test]
+    procedure EventOnly_ExtensionEditBeforeError()
+    var P: TestPage "LT AO Dep Card"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); Identity := 'EventOnly_ExtensionEditBeforeError'; O.Observe('case', 'EventOnly_ExtensionEditBeforeError'); L.FailAt('extension.both.before');
+        P.OpenEdit(); O.Observe('displayed.open', P.Name.Value()); StoredExtension('stored.open');
+        Ok := ReadExtensionMetadata(P, 1, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        asserterror P.ExtensionBoth.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        FinishExtensionErrorObservation(P);
+    end;
+
+    [Test]
+    procedure EventOnly_ExtensionEditAfterError()
+    var P: TestPage "LT AO Dep Card"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); Identity := 'EventOnly_ExtensionEditAfterError'; O.Observe('case', 'EventOnly_ExtensionEditAfterError'); L.FailAt('extension.both.after');
+        P.OpenEdit(); O.Observe('displayed.open', P.Name.Value()); StoredExtension('stored.open');
+        Ok := ReadExtensionMetadata(P, 1, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        asserterror P.ExtensionBoth.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        FinishExtensionErrorObservation(P);
+    end;
+
+    [Test]
+    procedure EventOnly_ViewWriteAfterError()
+    var P: TestPage "PAG EventOnly Page"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); Identity := 'EventOnly_ViewWriteAfterError'; O.Observe('case', 'EventOnly_ViewWriteAfterError'); L.FailAt('both.after'); L.RequestWrite('both.before', false);
+        P.OpenView(); O.Observe('displayed.open', P.Number.Value()); Stored('stored.open');
+        Ok := ReadBaseMetadata(P, 1, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        asserterror P.BaseBoth.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        FinishErrorObservation(P);
+    end;
+
+    [Test]
+    procedure EventOnly_ViewCommitAfterError()
+    var P: TestPage "PAG EventOnly Page"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); Identity := 'EventOnly_ViewCommitAfterError'; O.Observe('case', 'EventOnly_ViewCommitAfterError'); L.FailAt('both.after'); L.RequestWrite('both.before', true);
+        P.OpenView(); O.Observe('displayed.open', P.Number.Value()); Stored('stored.open');
+        Ok := ReadBaseMetadata(P, 1, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        asserterror P.BaseBoth.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        FinishErrorObservation(P);
+    end;
 }
