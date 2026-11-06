@@ -787,4 +787,34 @@ codeunit 69994 "PAG EventOnly Tests"
         asserterror P.BaseBoth.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
         FinishErrorObservation(P);
     end;
+
+    local procedure FinishOrdinaryErrorObservation(var P: TestPage "PAG EventOnly Page" )
+    begin
+        O.Observe('displayed.after', P.Number.Value()); Stored('stored.after');
+        O.Observe('trace.before.close', L.ReadTrace()); P.Close();
+        Stored('stored.closed'); O.Observe('trace.closed', L.ReadTrace());
+        O.Observe('capture.end', 'COMPLETE'); O.Finish();
+    end;
+
+    [Test]
+    procedure EventOnly_NormalViewAfterError()
+    var P: TestPage "PAG EventOnly Page"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); Identity := 'EventOnly_NormalViewAfterError'; O.Observe('case', 'EventOnly_NormalViewAfterError'); L.FailAt('normal.after');
+        P.OpenView(); O.Observe('displayed.open', P.Number.Value()); Stored('stored.open');
+        Ok := ReadBaseMetadata(P, 3, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        asserterror P.Normal.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        FinishOrdinaryErrorObservation(P);
+    end;
+
+    [Test]
+    procedure EventOnly_NormalEditAfterError()
+    var P: TestPage "PAG EventOnly Page"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); Identity := 'EventOnly_NormalEditAfterError'; O.Observe('case', 'EventOnly_NormalEditAfterError'); L.FailAt('normal.after');
+        P.OpenEdit(); O.Observe('displayed.open', P.Number.Value()); Stored('stored.open');
+        Ok := ReadBaseMetadata(P, 3, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        asserterror P.Normal.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        FinishOrdinaryErrorObservation(P);
+    end;
 }
