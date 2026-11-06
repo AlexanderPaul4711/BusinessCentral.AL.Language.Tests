@@ -4,6 +4,8 @@ The TestPage and TestPart API: opening, navigating, fields and actions, filters,
 
 ## Topics
 
+- `modal-field-validation/`: ListPlus modal field validation, explicit saves and close/store boundaries (native measurement bootstrap).
+
 - (area folder itself): 475 AL files that are about the area as a whole or were not given a topic yet.
 - `filters/`: SetRange, SetFilter, filter syntax and GetFilter(s) (8 AL files).
 - `lifecycle/`: opening, closing and page variables (6 AL files).
