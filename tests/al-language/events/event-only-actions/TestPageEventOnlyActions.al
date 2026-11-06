@@ -217,4 +217,71 @@ codeunit 69994 "PAG EventOnly Tests"
         end;
         FinishPart(P);
     end;
+
+    [Test]
+    procedure EventOnly_BaseEdit()
+    var P: TestPage "PAG EventOnly Page"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); O.Observe('case', 'EventOnly_BaseEdit');
+        P.OpenEdit(); O.Observe('displayed.open', P.Number.Value()); Stored('stored.open');
+        Ok := ReadBaseMetadata(P, 1, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        if Ok then begin P.BaseBoth.Invoke(); O.Observe('invoke', 'RETURNED'); end else begin
+            asserterror P.BaseBoth.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        end;
+        Finish(P);
+    end;
+
+    [Test]
+    procedure EventOnly_ExtensionEdit()
+    var P: TestPage "LT AO Dep Card"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); O.Observe('case', 'EventOnly_ExtensionEdit');
+        P.OpenEdit(); O.Observe('displayed.open', P.Name.Value()); StoredExtension('stored.open');
+        Ok := ReadExtensionMetadata(P, 1, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        if Ok then begin P.ExtensionBoth.Invoke(); O.Observe('invoke', 'RETURNED'); end else begin
+            asserterror P.ExtensionBoth.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        end;
+        FinishExtension(P);
+    end;
+
+    [Test]
+    procedure EventOnly_BaseDirtyEdit()
+    var P: TestPage "PAG EventOnly Page"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); O.Observe('case', 'EventOnly_BaseDirtyEdit');
+        P.OpenEdit(); O.Observe('displayed.open', P.Number.Value()); Stored('stored.open');
+        P.Number.SetValue(11); O.Observe('displayed.dirty', P.Number.Value()); Stored('stored.dirty');
+        Ok := ReadBaseMetadata(P, 1, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        if Ok then begin P.BaseBoth.Invoke(); O.Observe('invoke', 'RETURNED'); end else begin
+            asserterror P.BaseBoth.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        end;
+        Finish(P);
+    end;
+
+    [Test]
+    procedure EventOnly_PartEdit()
+    var P: TestPage "PAG EventOnly Part Host"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); O.Observe('case', 'EventOnly_PartEdit');
+        P.OpenEdit(); O.Observe('displayed.open', P.Lines.Number.Value()); Stored('stored.open');
+        Ok := ReadPartMetadata(P, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        if Ok then begin P.Lines.PartAfter.Invoke(); O.Observe('invoke', 'RETURNED'); end else begin
+            asserterror P.Lines.PartAfter.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        end;
+        FinishPart(P);
+    end;
+
+    [Test]
+    procedure EventOnly_PartDirtyEdit()
+    var P: TestPage "PAG EventOnly Part Host"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); O.Observe('case', 'EventOnly_PartDirtyEdit');
+        P.OpenEdit(); O.Observe('displayed.open', P.Lines.Number.Value()); Stored('stored.open');
+        P.Lines.Number.SetValue(11); O.Observe('displayed.dirty', P.Lines.Number.Value()); Stored('stored.dirty');
+        Ok := ReadPartMetadata(P, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        if Ok then begin P.Lines.PartAfter.Invoke(); O.Observe('invoke', 'RETURNED'); end else begin
+            asserterror P.Lines.PartAfter.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        end;
+        FinishPart(P);
+    end;
 }
