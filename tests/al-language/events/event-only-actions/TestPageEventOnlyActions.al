@@ -147,4 +147,74 @@ codeunit 69994 "PAG EventOnly Tests"
         end;
         Finish(P);
     end;
+    [Test]
+    procedure EventOnly_BaseBeforeError()
+    var P: TestPage "PAG EventOnly Page"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); O.Observe('case', 'EventOnly_BaseBeforeError'); L.FailAt('both.before');
+        P.OpenView(); O.Observe('displayed.open', P.Number.Value()); Stored('stored.open');
+        Ok := ReadBaseMetadata(P, 1, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        asserterror P.BaseBoth.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        Finish(P);
+    end;
+    [Test]
+    procedure EventOnly_BaseAfterError()
+    var P: TestPage "PAG EventOnly Page"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); O.Observe('case', 'EventOnly_BaseAfterError'); L.FailAt('both.after');
+        P.OpenView(); O.Observe('displayed.open', P.Number.Value()); Stored('stored.open');
+        Ok := ReadBaseMetadata(P, 1, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        asserterror P.BaseBoth.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        Finish(P);
+    end;
+    [Test]
+    procedure EventOnly_ExtensionBeforeError()
+    var P: TestPage "LT AO Dep Card"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); O.Observe('case', 'EventOnly_ExtensionBeforeError'); L.FailAt('extension.both.before');
+        P.OpenView(); O.Observe('displayed.open', P.Name.Value()); StoredExtension('stored.open');
+        Ok := ReadExtensionMetadata(P, 1, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        asserterror P.ExtensionBoth.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        FinishExtension(P);
+    end;
+    [Test]
+    procedure EventOnly_ExtensionAfterError()
+    var P: TestPage "LT AO Dep Card"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); O.Observe('case', 'EventOnly_ExtensionAfterError'); L.FailAt('extension.both.after');
+        P.OpenView(); O.Observe('displayed.open', P.Name.Value()); StoredExtension('stored.open');
+        Ok := ReadExtensionMetadata(P, 1, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        asserterror P.ExtensionBoth.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        FinishExtension(P);
+    end;
+    [TryFunction]
+    local procedure ReadPartMetadata(var P: TestPage "PAG EventOnly Part Host"; var Visible: Boolean; var Enabled: Boolean)
+    begin Visible := P.Lines.PartAfter.Visible(); Enabled := P.Lines.PartAfter.Enabled(); end;
+    local procedure FinishPart(var P: TestPage "PAG EventOnly Part Host")
+    begin
+        O.Observe('displayed.after', P.Lines.Number.Value()); Stored('stored.after');
+        O.Observe('trace.before.close', L.ReadTrace()); P.Close();
+        Stored('stored.closed'); O.Observe('trace.closed', L.ReadTrace());
+        O.Observe('capture.end', 'COMPLETE'); O.Finish();
+    end;
+    [Test]
+    procedure EventOnly_PartOpenWithoutInvoke()
+    var P: TestPage "PAG EventOnly Part Host";
+    begin
+        Initialize(); O.Observe('case', 'EventOnly_PartOpenWithoutInvoke');
+        P.OpenView(); O.Observe('displayed.open', P.Lines.Number.Value()); Stored('stored.open');
+        FinishPart(P);
+    end;
+    [Test]
+    procedure EventOnly_PartAfter()
+    var P: TestPage "PAG EventOnly Part Host"; Ok: Boolean; Visible: Boolean; Enabled: Boolean;
+    begin
+        Initialize(); O.Observe('case', 'EventOnly_PartAfter');
+        P.OpenView(); O.Observe('displayed.open', P.Lines.Number.Value()); Stored('stored.open');
+        Ok := ReadPartMetadata(P, Visible, Enabled); Metadata(Ok, Visible, Enabled);
+        if Ok then begin P.Lines.PartAfter.Invoke(); O.Observe('invoke', 'RETURNED'); end else begin
+            asserterror P.Lines.PartAfter.Invoke(); O.Observe('invoke', 'REFUSED'); O.ObserveError('invoke.error');
+        end;
+        FinishPart(P);
+    end;
 }
