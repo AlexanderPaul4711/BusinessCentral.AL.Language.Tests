@@ -1,5 +1,6 @@
 // BC Documentation: https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/methods-auto/page/page-runmodal-method
-// Scope: native measurement bootstrap; deliberate OBSERVE failures are not passing contracts.
+// Scope: measured ListPlus modal validation/save/close contracts; identical native27.5/28.5/29 captures at source5d9e46e6.
+// Close-inside-handler cases separately observe the late RunModal failure and post-Asserterror rollback; not browser Cancel rollback.
 // Fixtures: own validation/close definitions in ModalFormObjects.al; Probe Observer; ALTFixtureCleanup.
 // Duplicate audit: TestPageClosingActions covers close actions but not ListPlus dirty-field/store/trigger effects;
 // TestPageSaveDataLayer covers explicit Card saves, not suspended ListPlus modal validation and Cancel.
@@ -40,7 +41,8 @@ codeunit 69991 "PAG Modal Form Tests"
         end;
         if Ending in [2, 3] then Stored('postcatch') else Stored('returned');
         O.Observe('trace', L.ReadTrace()); O.Observe('capture.end', 'COMPLETE');
-        O.Finish();
+        VerifyObserved();
+        O.Verify();
     end;
     [ModalPageHandler]
     procedure FormHandler(var P: TestPage "PAG Modal Form ListPlus")
@@ -142,5 +144,174 @@ codeunit 69991 "PAG Modal Form Tests"
     begin
         Initialize();
         Measure('ListPlus_ValidateCommitError_ThenCancel', 5, true, 1);
+    end;
+    local procedure VerifyObserved()
+    begin
+        case Identity of
+            'ListPlus_Validate_ThenOK':
+                begin
+                    O.Expect('case', 'ListPlus_Validate_ThenOK');
+                    O.Expect('before.main', 'seed');
+                    O.Expect('before.side', 'side-note');
+                    O.Expect('displayed', 'EDIT');
+                    O.Expect('validated.main', 'seed');
+                    O.Expect('validated.side', 'side-EDIT');
+                    O.Expect('result', 'OK');
+                    O.Expect('returned.main', 'EDIT');
+                    O.Expect('returned.side', 'side-EDIT');
+                    O.Expect('trace', 'table.validate:EDIT;page.validate:EDIT;page.modify:EDIT;table.modify:1:EDIT;page.query:OK;page.close;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
+            'ListPlus_Validate_ThenClose':
+                begin
+                    O.Expect('case', 'ListPlus_Validate_ThenClose');
+                    O.Expect('before.main', 'seed');
+                    O.Expect('before.side', 'side-note');
+                    O.Expect('displayed', 'EDIT');
+                    O.Expect('validated.main', 'seed');
+                    O.Expect('validated.side', 'side-EDIT');
+                    O.Expect('closed.inside.main', 'EDIT');
+                    O.Expect('closed.inside.side', 'side-EDIT');
+                    O.Expect('trace.closed.inside', 'table.validate:EDIT;page.validate:EDIT;page.modify:EDIT;table.modify:1:EDIT;page.query:OK;page.close;');
+                    O.Expect('runmodal.error|text', 'The RunModal procedure could not close the page 69990 as it has already been closed.');
+                    O.Expect('runmodal.error|code', 'TestCodeUnit');
+                    O.Expect('result', 'NO_RETURN_AFTER_HANDLER_CLOSE');
+                    O.Expect('postcatch.main', 'seed');
+                    O.Expect('postcatch.side', 'side-note');
+                    O.Expect('trace', 'table.validate:EDIT;page.validate:EDIT;page.modify:EDIT;table.modify:1:EDIT;page.query:OK;page.close;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
+            'ListPlus_PlainCancel_RefusedThenClose':
+                begin
+                    O.Expect('case', 'ListPlus_PlainCancel_RefusedThenClose');
+                    O.Expect('before.main', 'seed');
+                    O.Expect('before.side', 'side-note');
+                    O.Expect('displayed', 'EDIT');
+                    O.Expect('validated.main', 'seed');
+                    O.Expect('validated.side', 'side-EDIT');
+                    O.Expect('cancel.error|text', 'The built-in action = Cancel is not found on the page.');
+                    O.Expect('cancel.error|code', 'TestActionNotFound');
+                    O.Expect('after.refused.cancel', 'EDIT');
+                    O.Expect('closed.inside.main', 'EDIT');
+                    O.Expect('closed.inside.side', 'side-note');
+                    O.Expect('trace.closed.inside', 'table.validate:EDIT;page.validate:EDIT;page.modify:EDIT;table.modify:1:EDIT;page.query:OK;page.close;');
+                    O.Expect('runmodal.error|text', 'The RunModal procedure could not close the page 69990 as it has already been closed.');
+                    O.Expect('runmodal.error|code', 'TestCodeUnit');
+                    O.Expect('result', 'NO_RETURN_AFTER_HANDLER_CLOSE');
+                    O.Expect('postcatch.main', 'seed');
+                    O.Expect('postcatch.side', 'side-note');
+                    O.Expect('trace', 'table.validate:EDIT;page.validate:EDIT;page.modify:EDIT;table.modify:1:EDIT;page.query:OK;page.close;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
+            'ListPlus_LookupValidate_ThenOK':
+                begin
+                    O.Expect('case', 'ListPlus_LookupValidate_ThenOK');
+                    O.Expect('before.main', 'seed');
+                    O.Expect('before.side', 'side-note');
+                    O.Expect('displayed', 'EDIT');
+                    O.Expect('validated.main', 'seed');
+                    O.Expect('validated.side', 'side-EDIT');
+                    O.Expect('result', 'LookupOK');
+                    O.Expect('returned.main', 'EDIT');
+                    O.Expect('returned.side', 'side-EDIT');
+                    O.Expect('trace', 'table.validate:EDIT;page.validate:EDIT;page.modify:EDIT;table.modify:1:EDIT;page.query:LookupOK;page.close;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
+            'ListPlus_LookupValidate_ThenCancel':
+                begin
+                    O.Expect('case', 'ListPlus_LookupValidate_ThenCancel');
+                    O.Expect('before.main', 'seed');
+                    O.Expect('before.side', 'side-note');
+                    O.Expect('displayed', 'EDIT');
+                    O.Expect('validated.main', 'seed');
+                    O.Expect('validated.side', 'side-EDIT');
+                    O.Expect('result', 'LookupCancel');
+                    O.Expect('returned.main', 'EDIT');
+                    O.Expect('returned.side', 'side-EDIT');
+                    O.Expect('trace', 'table.validate:EDIT;page.validate:EDIT;page.modify:EDIT;table.modify:1:EDIT;page.query:LookupCancel;page.close;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
+            'ListPlus_ValidateOwnSave_ThenCancel':
+                begin
+                    O.Expect('case', 'ListPlus_ValidateOwnSave_ThenCancel');
+                    O.Expect('before.main', 'seed');
+                    O.Expect('before.side', 'side-note');
+                    O.Expect('displayed', 'EDIT');
+                    O.Expect('validated.main', 'EDIT');
+                    O.Expect('validated.side', 'side-EDIT');
+                    O.Expect('result', 'LookupCancel');
+                    O.Expect('returned.main', 'EDIT');
+                    O.Expect('returned.side', 'side-EDIT');
+                    O.Expect('trace', 'table.validate:EDIT;page.validate:EDIT;page.modify:EDIT;table.modify:1:EDIT;page.query:LookupCancel;page.close;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
+            'ListPlus_SaveVeto_ThenOK':
+                begin
+                    O.Expect('case', 'ListPlus_SaveVeto_ThenOK');
+                    O.Expect('before.main', 'seed');
+                    O.Expect('before.side', 'side-note');
+                    O.Expect('displayed', 'EDIT');
+                    O.Expect('validated.main', 'seed');
+                    O.Expect('validated.side', 'side-EDIT');
+                    O.Expect('after.action.main', 'seed');
+                    O.Expect('after.action.side', 'side-EDIT');
+                    O.Expect('trace.after.action', 'table.validate:EDIT;page.validate:EDIT;page.modify:EDIT;page.query:OK;page.close;');
+                    O.Expect('result', 'OK');
+                    O.Expect('returned.main', 'seed');
+                    O.Expect('returned.side', 'side-EDIT');
+                    O.Expect('trace', 'table.validate:EDIT;page.validate:EDIT;page.modify:EDIT;page.query:OK;page.close;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
+            'ListPlus_CloseVeto_ThenSecondOK':
+                begin
+                    O.Expect('case', 'ListPlus_CloseVeto_ThenSecondOK');
+                    O.Expect('before.main', 'seed');
+                    O.Expect('before.side', 'side-note');
+                    O.Expect('displayed', 'EDIT');
+                    O.Expect('validated.main', 'seed');
+                    O.Expect('validated.side', 'side-EDIT');
+                    O.Expect('after.veto', 'EDIT');
+                    O.Expect('vetoed.main', 'EDIT');
+                    O.Expect('vetoed.side', 'side-EDIT');
+                    O.Expect('result', 'OK');
+                    O.Expect('returned.main', 'EDIT');
+                    O.Expect('returned.side', 'side-EDIT');
+                    O.Expect('trace', 'table.validate:EDIT;page.validate:EDIT;page.modify:EDIT;table.modify:1:EDIT;page.query:OK;page.query:OK;page.close;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
+            'ListPlus_ValidateError_ThenCancel':
+                begin
+                    O.Expect('case', 'ListPlus_ValidateError_ThenCancel');
+                    O.Expect('before.main', 'seed');
+                    O.Expect('before.side', 'side-note');
+                    O.Expect('validate.error|text', 'Validation error for Field: Value,  Message = ''modal form validation failure''');
+                    O.Expect('validate.error|code', 'TestValidation');
+                    O.Expect('displayed', 'seed');
+                    O.Expect('validated.main', 'seed');
+                    O.Expect('validated.side', 'side-note');
+                    O.Expect('result', 'LookupCancel');
+                    O.Expect('returned.main', 'seed');
+                    O.Expect('returned.side', 'side-note');
+                    O.Expect('trace', 'table.validate:EDIT;page.query:LookupCancel;page.close;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
+            'ListPlus_ValidateCommitError_ThenCancel':
+                begin
+                    O.Expect('case', 'ListPlus_ValidateCommitError_ThenCancel');
+                    O.Expect('before.main', 'seed');
+                    O.Expect('before.side', 'side-note');
+                    O.Expect('validate.error|text', 'Validation error for Field: Value,  Message = ''modal form committed validation failure''');
+                    O.Expect('validate.error|code', 'TestValidation');
+                    O.Expect('displayed', 'seed');
+                    O.Expect('validated.main', 'seed');
+                    O.Expect('validated.side', 'side-EDIT');
+                    O.Expect('result', 'LookupCancel');
+                    O.Expect('returned.main', 'seed');
+                    O.Expect('returned.side', 'side-EDIT');
+                    O.Expect('trace', 'table.validate:EDIT;page.query:LookupCancel;page.close;');
+                    O.Expect('capture.end', 'COMPLETE');
+                end;
+            else Error('Unknown modal form observation: %1', Identity);
+        end;
     end;
 }
